@@ -26,3 +26,19 @@ optional arguments:
   -b                  brute force backup extension, extensions
   -v                  verbose output
 </pre>
+
+
+Output
+======
+$  ./tilde_enum.py scanner_out.txt /fuzzdb/discovery/PredictableRes/raft-small-words-lowercase.txt 
+[+]  Found URL: https://vulnwebsite.example.com/
+[-]  Testing with dummy file request https://vulnwebsite.example.com/Vv4c9T3sfc.htm
+[-]	   URLNotThere -> HTTP Code: 404, Response Length: 1635
+[-]  Testing with user-submitted https://vulnwebsite.example.com/
+[-]	   URLUser -> HTTP Code: 200, Response Length: 1588
+[-]  Now starting the web calls
+[?]  URL: (Size TBD) https://vulnwebsite.example.com/global.asax with Response: HTTP Error 403: Forbidden 
+[?]  URL: (Size TBD) https://vulnwebsite.example.com/mvc.sitemap with Response: HTTP Error 403: Forbidden 
+[?]  URL: (Size TBD) https://vulnwebsite.example.com/packages.config with Response: HTTP Error 403: Forbidden 
+[***]  Found one! (Size 1588) https://vulnwebsite.example.com/parameters.xml
+[***]  Found one! (Size 1588) https://vulnwebsite.example.com/systeminfo.xml
