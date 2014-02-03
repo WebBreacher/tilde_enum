@@ -7,7 +7,7 @@ You feed this script the output from the https://code.google.com/p/iis-shortname
 
 The [fuzzdb](https://code.google.com/p/fuzzdb/) word lists are pretty good. We sometimes use the https://code.google.com/p/fuzzdb/source/browse/trunk/discovery/PredictableRes/raft-small-words-lowercase.txt (or large or medium) for this work.
 
-There are bugs in this version (it is 75+% good). Looking for fedback and suggestions.
+There are known bugs that we are working to resolve in this version (it is 75+% good). Looking for feedback and suggestions.
 
 
 Help
