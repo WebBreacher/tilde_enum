@@ -3,6 +3,11 @@ tilde_enum
 
 Takes the output of a java scanner that exploits the IIS tilde 8.3 enumeration vuln and tries to get you full file names
 
+You feed this script the output from the https://code.google.com/p/iis-shortname-scanner-poc/ scanner and also a word list of potential file names. The script will look up the file roots in your word list and then try them with appropriate extensions.
+
+There are bugs in this version (it is 75+% good). Looking for fedback and suggestions.
+
+
 Help
 ====
 <pre>$  ./tilde_enum.py -h
