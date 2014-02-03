@@ -5,6 +5,8 @@ Takes the output of a java scanner that exploits the IIS tilde 8.3 enumeration v
 
 You feed this script the output from the https://code.google.com/p/iis-shortname-scanner-poc/ scanner and also a word list of potential file names. The script will look up the file roots in your word list and then try them with appropriate extensions.
 
+The [fuzzdb](https://code.google.com/p/fuzzdb/) word lists are pretty good. We sometimes use the https://code.google.com/p/fuzzdb/source/browse/trunk/discovery/PredictableRes/raft-small-words-lowercase.txt (or large or medium) for this work.
+
 There are bugs in this version (it is 75+% good). Looking for fedback and suggestions.
 
 
