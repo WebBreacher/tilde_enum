@@ -38,8 +38,7 @@ $  ./tilde_enum.py scanner_out.txt /fuzzdb/discovery/PredictableRes/raft-small-w
 [-]  Testing with user-submitted https://vulnwebsite.example.com/
 [-]	   URLUser -> HTTP Code: 200, Response Length: 1588
 [-]  Now starting the web calls
-[?]  URL: (Size TBD) https://vulnwebsite.example.com/global.asax with Response: HTTP Error 403: Forbidden 
-[?]  URL: (Size TBD) https://vulnwebsite.example.com/mvc.sitemap with Response: HTTP Error 403: Forbidden 
+[?]  URL: (Size TBD) https://vulnwebsite.example.com/global.asax with Response: HTTP Error 403: Forbidden
 [?]  URL: (Size TBD) https://vulnwebsite.example.com/packages.config with Response: HTTP Error 403: Forbidden 
 [***]  Found one! (Size 1588) https://vulnwebsite.example.com/parameters.xml
 [***]  Found one! (Size 1588) https://vulnwebsite.example.com/systeminfo.xml
