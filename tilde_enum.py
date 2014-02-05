@@ -25,6 +25,7 @@ targets = []
 
 # Findings is the list of URLs that may be good on the web site
 findings = []
+findings_other = []  # HTTP Response Codes other than 200
 
 # Location of the extension brute force word list
 exts = 'exts'
@@ -182,7 +183,7 @@ def main():
 		# If nothing came back from the search, just try use the original string
 		if not filename_matches:
 			filename_matches.append(filename.lower())
-		# debug if args.v: print bcolors.PURPLE + '[+]  File name matches for %s are: %s' % (filename, filename_matches) + bcolors.ENDC
+		if args.v: print bcolors.PURPLE + '[+]  File name matches for %s are: %s' % (filename, filename_matches) + bcolors.ENDC
 
 		# Go search the extension word list file for matches for the extension
 		if len(ext) < 3:
@@ -191,7 +192,7 @@ def main():
 		else:
 			if args.v: print bcolors.PURPLE + '[+]  Searching for %s in extension word list' % ext + bcolors.ENDC
 			ext_matches = searchFileForString(ext, exts)
-		# debug if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
+		if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
 
 		# Now do the real hard work of cycling through each filename_matches and adding the ext_matches,
 		# do the look up and examine the response codes to see if we found a file.
@@ -215,19 +216,23 @@ def main():
 				# Here is where we figure out if we found something or just found something odd
 				if test_response_code == response_code['user_code']:
 					print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
-					findings.append(url_to_try + '  (Size ' + test_response_length + ')')
+					findings.append(url_to_try + '  - Size ' + test_response_length)
 				elif test_response_code != 404:
 					print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length,url_to_try, url_response) + bcolors.ENDC
-					findings.append('Response Code ' + test_response_code + ' - ' + url_to_try + '  (Size ' + test_response_length + ')')
+					findings_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
 
 	# Output findings
 	if findings:
-		print '\n----------------------------------------'
+		print '\n---------- FINAL OUTPUT ------------------------------'
 		print '[*]  We found files for you to look at'
 		for out in sorted(findings):
 			print bcolors.YELLOW + '[*]  %s' % out + bcolors.ENDC
 	else:
-		print '[ ]  No valid files were discovered. Sorry dude.'
+		print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
+	if findings_other:
+		print '\n[*]  We found URLs you check out. They were not HTTP response code 200s.'
+		for out in sorted(findings_other):
+			print bcolors.YELLOW + '[?]  %s' % out + bcolors.ENDC
 
 
 #=================================================
