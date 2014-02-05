@@ -211,7 +211,7 @@ def main():
 				else:
 					test_response_code = 0
 
-				if args.v: print bcolors.PURPLE + '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code) + bcolors.ENDC
+				if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
 
 				# Here is where we figure out if we found something or just found something odd
 				if test_response_code == response_code['user_code']:
@@ -224,15 +224,15 @@ def main():
 	# Output findings
 	if findings:
 		print '\n---------- FINAL OUTPUT ------------------------------'
-		print '[*]  We found files for you to look at'
+		print bcolors.GREEN + '[*]  We found files for you to look at' + bcolors.ENDC
 		for out in sorted(findings):
-			print bcolors.YELLOW + '[*]  %s' % out + bcolors.ENDC
+			print '[*]  %s' % out
 	else:
 		print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
 	if findings_other:
-		print '\n[*]  We found URLs you check out. They were not HTTP response code 200s.'
+		print bcolors.GREEN + '\n[*]  We found URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
 		for out in sorted(findings_other):
-			print bcolors.YELLOW + '[?]  %s' % out + bcolors.ENDC
+			print '[?]  %s' % out
 
 
 #=================================================
