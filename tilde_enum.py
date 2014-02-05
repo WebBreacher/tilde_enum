@@ -104,6 +104,12 @@ def initialCheckUrl(url):
 		return response_code
 
 
+def fingerprintServer(url):
+	# Check what server version is reported in the HEADER:Server response
+	fingerprint = getWebServerResponse(url)
+	return fingerprint.headers['server']
+
+
 def readScanFile(file_name):
 	# Open the tilde output scan_file (or try to)
 	try:
@@ -145,30 +151,27 @@ def searchFileForString(string, file):
 
 
 def main():
-	# Read the scanner output file into a list
-	# They will be in ABCDEF.EXT format (no tilde and number)
-	targets = readScanFile(args.scan_file_to_parse.name)
-	if not targets:
-		print bcolors.RED + '[!]  Error: No FILE entries found in scanner output' + bcolors.ENDC
+	# Check the User-supplied URL
+	if args.url:
+		response_code = initialCheckUrl(args.url)
+	else:
+		print bcolors.RED + '[!] You need to enter a valid URL for us to test.' + bcolors.ENDC
 		sys.exit()
 
-	# The last item in the targets list is the URL. Remove it and assign it to url variable
-	url = targets.pop()
-	print bcolors.YELLOW + '[+]  Found URL: %s' % url + bcolors.ENDC
-
-	if args.v:
-		for file in targets:
-			print bcolors.PURPLE + '[+]  Found file: %s' % file + bcolors.ENDC
-
-	# URL to check. Extracted from the scanner output file. The HTTP response codes and lengths are returned.
-	response_code = initialCheckUrl(url)
 	if args.v: print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
 
-	filename_matches = []
+	# Check if the server is IIS and vuln to tilde directory enumeration
+	server_header = fingerprintServer(args.url)
+	if 'IIS' in server_header:
+		print bcolors.GREEN + '[+] The server is reporting that it is IIS.' + bcolors.ENDC
+	else:
+		print bcolors.RED + '[!] Error. Server is not reporting that it is IIS. If you know it is, use the -f flag to force testing.' + bcolors.ENDC
+		sys.exit()
 
 	# Start the URL requests to the server
 	print bcolors.GREEN + '[-]  Now starting the web calls' + bcolors.ENDC
 
+	sys.exit()
 	# So the URL is live and gives 200s back (otherwise script would have exit'd)
     # Find matches to the filename in our word list
 	for file in targets:
@@ -242,7 +245,9 @@ def main():
 # Command Line Arguments
 parser = argparse.ArgumentParser(description='Expands the file names found from the tilde enumeration vuln')
 parser.add_argument('-b', action='store_true', default=False, help='brute force backup extension, extensions')
-parser.add_argument('scan_file_to_parse', type=file, help='the java scanner file that you want parsed')
+parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
+#parser.add_argument('scan_file_to_parse', type=file, help='the java scanner file that you want parsed')
+parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
 parser.add_argument('wordlist', help='the wordlist file')
 args = parser.parse_args()
@@ -251,14 +256,14 @@ args = parser.parse_args()
 # The entire bcolors class was taken verbatim from the Social Engineer's Toolkit (ty @SET)
 if check_os() == "posix":
 	class bcolors:
-		PURPLE = '\033[95m'    # Verbose
+		PURPLE = '\033[95m'		# Verbose
 		CYAN = '\033[96m'
 		DARKCYAN = '\033[36m'
 		BLUE = '\033[94m'
-		GREEN = '\033[92m'     # Normal
-		YELLOW = '\033[93m'    # Findings
-		RED = '\033[91m'       # Errors
-		ENDC = '\033[0m'
+		GREEN = '\033[92m'		# Normal
+		YELLOW = '\033[93m'		# Findings
+		RED = '\033[91m'		# Errors
+		ENDC = '\033[0m'		# End colorization
 
 		def disable(self):
 			self.PURPLE = ''
