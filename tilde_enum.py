@@ -74,24 +74,27 @@ def initialCheckUrl(url):
 
 	# Make the dummy request to the remote server
 	not_there_response = getWebServerResponse(not_there_url)
+
+	# Create a content length
+	not_there_response_content_length = len(not_there_response.read())
+
 	if not_there_response.getcode():
-		print '[-]	URLNotThere -> HTTP Code: %s, Response Length: %s' % (not_there_response.getcode(), not_there_response.headers['content-length'])
-		response_code['dummy_code'], response_code['dummy_length'] = not_there_response.getcode(), not_there_response.headers['content-length']
+		print '[-]	URLNotThere -> HTTP Code: %s, Response Length: %s' % (not_there_response.getcode(), not_there_response_content_length)
+		response_code['not_there_code'], response_code['not_there_length'] = not_there_response.getcode(), not_there_response_content_length
 	else:
 		print '[+]	URLNotThere -> HTTP Code: %s, Error Code: %s' % (not_there_response.code, not_there_response.reason)
-		response_code['dummy_code'], response_code['dummy_reason'] = not_there_response.code
+		response_code['not_there_code'], response_code['not_there_reason'] = not_there_response.code
 
-	# Check if we didn't get a 404. This would indicate custom error messages or some redirection
-	# and will cause issues later.
-	if response_code['dummy_code'] != 404:
+	# Check if we didn't get a 404. This would indicate custom error messages or some redirection and will cause issues later.
+	if response_code['not_there_code'] != 404:
 		print bcolors.RED + '[!]  FALSE POSITIVE ALERT: We may have a problem determining real responses since we did not get a 404 back.' + bcolors.ENDC
 
 	# Now that we have the "definitely not there" page, check for one that should be there
 	print bcolors.GREEN + '[-]  Testing with user-submitted %s' % (url) + bcolors.ENDC
 	url_response = getWebServerResponse(url)
 	if url_response.getcode():
-		print '[-]	URLUser -> HTTP Code: %s, Response Length: %s' % (url_response.getcode(), url_response.headers['content-length'])
-		response_code['user_code'], response_code['user_length'] = url_response.getcode(), url_response.headers['content-length']
+		print '[-]	URLUser -> HTTP Code: %s, Response Length: %s' % (url_response.getcode(), len(url_response.read()))
+		response_code['user_code'], response_code['user_length'] = url_response.getcode(), len(url_response.read())
 	else:
 		print '[+]	URLUser -> HTTP Code: %s, Error Code: %s' % (url_response.code, url_response.reason)
 		response_code['user_code'], response_code['user_reason'] = url_response.code, url_response.reason
@@ -102,12 +105,6 @@ def initialCheckUrl(url):
 		sys.exit()
 	else:
 		return response_code
-
-
-def fingerprintServer(url):
-	# Check what server version is reported in the HEADER:Server response
-	fingerprint = getWebServerResponse(url)
-	return fingerprint.headers['server']
 
 
 def readScanFile(file_name):
@@ -161,12 +158,33 @@ def main():
 	if args.v: print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
 
 	# Check if the server is IIS and vuln to tilde directory enumeration
-	server_header = fingerprintServer(args.url)
-	if 'IIS' in server_header:
-		print bcolors.GREEN + '[+] The server is reporting that it is IIS.' + bcolors.ENDC
+	server_header = getWebServerResponse(args.url)
+	if 'IIS' in server_header.headers['server'] or 'icrosoft' in server_header.headers['server']:
+		print bcolors.GREEN + '[+]  The server is reporting that it is IIS (%s).' % server_header.headers['server'] + bcolors.ENDC
+		# TODO - Figure out which version of IIS
 	else:
-		print bcolors.RED + '[!] Error. Server is not reporting that it is IIS. If you know it is, use the -f flag to force testing.' + bcolors.ENDC
+		print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS (%s).\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' % server_header + bcolors.ENDC
 		sys.exit()
+
+	# Check to see if the server is vulnerable to the tilde vulnerability
+	resp = getWebServerResponse(args.url + '/*~1*/.aspx')
+	if resp.code == 404:
+		print bcolors.YELLOW + '[+]  The server is vulnerable to the tilde enumeration vulnerability.' + bcolors.ENDC
+		vuln = True
+	elif args.f:
+		print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.\n[!]     But you have used the -f switch to force us to try.' + bcolors.ENDC
+	else:
+		print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
+		sys.exit()
+
+
+
+
+
+
+
+
+
 
 	# Start the URL requests to the server
 	print bcolors.GREEN + '[-]  Now starting the web calls' + bcolors.ENDC
