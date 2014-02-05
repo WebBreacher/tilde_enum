@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -tt
 
 '''
 -------------------------------------------------------------------------------
@@ -171,7 +171,7 @@ def main():
 		# If nothing came back from the search, just try use the original string
 		if not filename_matches:
 			filename_matches.append(filename.lower())
-		if args.v: print '[+]  File name matches for %s are: %s' % (filename, filename_matches)
+		# debug if args.v: print '[+]  File name matches for %s are: %s' % (filename, filename_matches)
 
 		# Go search the extension word list file for matches for the extension
 		if len(ext) < 3:
@@ -180,7 +180,7 @@ def main():
 		else:
 			if args.v: print '[+]  Searching for %s in extension word list' % ext
 			ext_matches = searchFileForString(ext, exts)
-		if args.v: print '[+]  Extension matches for %s are: %s' % (ext, ext_matches)
+		# debug if args.v: print '[+]  Extension matches for %s are: %s' % (ext, ext_matches)
 
 		# Now do the real hard work of cycling through each filename_matches and adding the ext_matches,
 		# do the look up and examine the response codes to see if we found a file.
@@ -192,8 +192,10 @@ def main():
 				# Pull out just the HTTP response code number
 				if hasattr(url_response, 'code'):
 					test_response_code = url_response.code
+					test_response_length = url_response.headers['Content-Length']
 				elif hasattr(url_response, 'getcode'):
 					test_response_code = url_response.getcode()
+					test_response_length = len(url_response.reason())
 				else:
 					test_response_code = 0
 
@@ -201,10 +203,10 @@ def main():
 
 				# Here is where we figure out if we found something or just found something odd
 				if test_response_code == response_code['user_code']:
-					print '[***]  Found one! (Size %s) %s' % (response_code['user_length'], url_to_try)
-					findings.append(response_code['user_length'] + ' - ' + url_to_try)
+					print '[***]  Found one! (Size %s) %s' % (test_response_length, url_to_try)
+					findings.append('(Size ' + test_response_length + ') - ' + url_to_try)
 				elif test_response_code != 404:
-					print '[?]  URL: (Size TBD) %s with Response: %s ' % (url_to_try, url_response)
+					print '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length,url_to_try, url_response)
 					findings.append(url_to_try)
 
 	# Output findings
@@ -212,7 +214,7 @@ def main():
 		print '\n----------------------------------------'
 		print '[*]  We found files for you to look at'
 		for out in sorted(findings):
-			print ' [*]  FOUND: %s' % out
+			print '[*]  FOUND: %s' % out
 	else:
 		print '[ ]  No valid files were discovered. Sorry dude.'
 
