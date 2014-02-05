@@ -8,7 +8,7 @@ Authors:	Ryan Tierney (nu11by73) and Micah Hoffman (@WebBreacher)
 -------------------------------------------------------------------------------
 '''
 
-import os, sys, re, argparse, random, string
+import os, sys, re, argparse, random, string, itertools
 from urllib2 import Request, urlopen, URLError
 from urlparse import urlparse
 
@@ -29,6 +29,9 @@ findings_other = []  # HTTP Response Codes other than 200
 
 # Location of the extension brute force word list
 exts = 'exts'
+
+# Character set to use for brute forcing ([0-9][a-z]_- )
+chars = 'taoeiwnshrdlcumfgypbvkjxqz 1234567890-_'
 
 # Response codes - user and error
 response_code = {}
@@ -107,31 +110,6 @@ def initialCheckUrl(url):
 		return response_code
 
 
-def readScanFile(file_name):
-	# Open the tilde output scan_file (or try to)
-	try:
-		scan_file = open(file_name,'r').readlines()
-	except (IOError) :
-		print bcolors.RED + '[!]  [Error] Can\'t read the scanner file you entered.' + bcolors.ENDC
-		sys.exit()
-
-	# Need to parse through the scanner output file for the target files and URL
-	for line in scan_file:
-		# One line should have the Target URL used for the scanner
-		url = re.match('Target = (.+)', line)
-		if url: targets.append(url.group(1))
-
-		# Matching the "File:" and then pulling the name and ext
-		# This strips out the ~[0-9] and just makes the result ABCDEF.EXT
-		found = re.match('File: (.+)~[0-9](\..+)', line)
-		if found:
-			targets.append(found.group(1) + found.group(2))
-
-	# Finally, return a sorted list of files. Sorting is important as it puts the lowercase
-	# http... of the URL at the bottom
-	return sorted(targets)
-
-
 def searchFileForString(string, file):
 	# Open the wordlist file (or try to)
 	try:
@@ -158,6 +136,7 @@ def main():
 	if args.v: print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
 
 	# Check if the server is IIS and vuln to tilde directory enumeration
+	# TODO - Need to make this more reliable than just relying on header responses
 	server_header = getWebServerResponse(args.url)
 	if 'IIS' in server_header.headers['server'] or 'icrosoft' in server_header.headers['server']:
 		print bcolors.GREEN + '[+]  The server is reporting that it is IIS (%s).' % server_header.headers['server'] + bcolors.ENDC
@@ -178,6 +157,7 @@ def main():
 		sys.exit()
 
 
+	# Now we need to go through the char[] and try them and find files and dirs.
 
 
 
