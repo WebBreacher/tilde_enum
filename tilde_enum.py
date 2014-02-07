@@ -23,15 +23,17 @@ headers = { 'User-Agent' : 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; 
 # Targets is the list of files from the scanner output
 targets = []
 
-# Findings is the list of URLs that may be good on the web site
-findings = []
-findings_other = []  # HTTP Response Codes other than 200
+# Findings is the list of URLs that may be  `good on the web site
+findings_file =  []		# Files discovered
+findings_dir =   [] 	# Directories discovered
+findings_other = []  	# HTTP Response Codes other than 200
+findings_final = []		# Where the guessed files are output
 
 # Location of the extension brute force word list
 exts = 'exts'
 
 # Character set to use for brute forcing ([0-9][a-z]_- )
-chars = 'taoeiwnshrdlcumfgypbvkjxqz 1234567890-_'
+chars = 'taoeiwnshrdlcumfgypbvkjxqz1234567890-_'
 
 # Response codes - user and error
 response_code = {}
@@ -169,15 +171,19 @@ def main():
 		resp = getWebServerResponse(url_good+'/'+char+check_string)
 		if resp.code == 404:  # Got the first valid char
 
-			# TODO - We are not getting the names < 6 chars
-			# TODO - Check to see how big the word is
-			resp_len = getWebServerResponse(url_good+'/'+char+'%3f'+check_string)
-			if resp_len == 404:
-				print 'continuing'
-			else:
-				print url_good+'/'+char+'%3f'+check_string, resp_len.code
 
-			# STOPPED HERE...GOTTA FIGURE OUT A WAY TO DO FILES AND DIRS < 6 CHARS
+			'''resp_len = getWebServerResponse(url_good+'/'+char+'%3f'+check_string)
+			if resp_len.code == 404:
+				print 'Another char -> ' + url_good+'/'+char+'%3f'+check_string, resp_len.code
+			elif resp_len.code == 400:
+				print 'That is long enough -> ' + url_good+'/'+char+'%3f'+check_string, resp_len.code'''
+
+		# I think one of the issues is that I'm not checking at each # placeholder for if the file is done
+		# Only the files that make it to the 6th char are added to the list
+		# At each level I should check to see if there is another char (%3f) and if not, add that value
+		# to the findings and then continue
+
+
 			for char2 in chars:
 				resp2 = getWebServerResponse(url_good+'/'+char+char2+check_string)
 
@@ -198,47 +204,106 @@ def main():
 												resp6 = getWebServerResponse(url_good+'/'+char+char2+char3+char4+char5+char6+check_string)
 
 												if resp6.code == 404:  # Got the sixth valid char
-													findings.append(char+char2+char3+char4+char5+char6)
-													#print url_good+'/'+char+char2+char3+char4+char5+char6+check_string # debug
-				#else:
-				#	print '2 char = ' +url_good+'/'+char+char2
-		#else:
-		#	print '1 char = ' +url_good+'/'+char
-	print findings
-	# Start the URL requests to the server
-	print bcolors.GREEN + '[-]  Now starting the web calls' + bcolors.ENDC
 
-	sys.exit()
+													# Check to see if this is a directory or file
+													resp6_dir = getWebServerResponse(url_good+'/'+char+char2+char3+char4+char5+char6+'~1/.aspx')
+													if resp6_dir.code == 404:
+														print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
+														findings_dir.append(char+char2+char3+char4+char5+char6)
+													else:
+														print bcolors.YELLOW + '[+]  Found a new file: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
+														findings_file.append(char+char2+char3+char4+char5+char6)
+
+	# Now that we have the file names, we have to find their extensions
+	# Need to check after each to find out if there is another char
+	'''for file in findings_file:
+		print bcolors.GREEN + 'Looking for extensions for %s' % file
+
+		# Check how many chars are in the extension
+		3char_ext = getWebServerResponse(url_good+'/'+file+'~1.%3f%3f%3f/.aspx')
+
+		if resp1.code == 404:	# At least 1 character in ext
+			resp2 = getWebServerResponse(url_good+'/'+file+'~1.%3f%3f/.aspx')
+			if resp2.code == 400:	# At least 2 characters in ext
+				resp3 = getWebServerResponse(url_good+'/'+file+'~1.%3f%3f%3f/.aspx')
+				if resp3.code == 400:	# At least 3 characters in ext
+					print '    %s has a 3 char extension' % file
+				else:
+					print '    %s has a 2 char extension' % file
+			else:
+				print '    %s has a 1 char extension' % file
+		else:
+			print '    %s has no extension' % file
+
+
+
+		for char1 in chars:
+			resp1 = getWebServerResponse(url_good+'/'+file+'~1.'+char1+'/.aspx')
+			print url_good+'/'+file+'~1.'+char1+'/.aspx'
+			print char1,resp1.code
+
+
+			if resp1.code == 404:  # Got the first valid char
+				for char2 in chars:
+					resp2 = getWebServerResponse(url_good+'/'+file+'~1.'+char1+char2+'/.aspx')
+
+					if resp2.code == 404:  # Got the second valid char
+						for char3 in chars:
+							resp3 = getWebServerResponse(url_good+'/'+file+'~1.'+char1+char2+char3+'/.aspx')
+
+							if resp3.code == 404:  # Got the third valid char
+								print file+' . '+char1+char2+char3'''
+
+	print 'Files: %s' % sorted(findings_file) #debug
+	print 'Dirs: %s' % sorted(findings_dir) #debug
+	print bcolors.GREEN + '[-]  Finished doing the 8.3 enumeration.' + bcolors.ENDC
+
+	# Start the URL requests to the server
+	print bcolors.GREEN + '[-]  Now starting the word guessing using word list calls' + bcolors.ENDC
+
+	# Read in the extensions word list into a list
+	# This is only temporary until I get the extension stuff above working
+	try:
+		extensions = open(exts,'r').readlines()
+	except (IOError) :
+		print bcolors.RED + '[!]  [Error] Can\'t read the wordlist file you entered.' + bcolors.ENDC
+		sys.exit()
+
+
 	# So the URL is live and gives 200s back (otherwise script would have exit'd)
     # Find matches to the filename in our word list
-	for file in targets:
+	for filename in findings_file:
 
 		# Break apart the file into filename and extension
-		filename, ext_temp = os.path.splitext(file)
-		ext = ext_temp.lstrip('.')
+		#filename, ext_temp = os.path.splitext(file)
+		#ext = ext_temp.lstrip('.')
 
 		# Go search the user's word list file for matches for the file
 		if args.v: print bcolors.PURPLE + '[+]  Searching for %s in word list' % filename + bcolors.ENDC
 		filename_matches = searchFileForString(filename, args.wordlist)
+
 		# If nothing came back from the search, just try use the original string
 		if not filename_matches:
-			filename_matches.append(filename.lower())
+			filename_matches.append(filename)
 		if args.v: print bcolors.PURPLE + '[+]  File name matches for %s are: %s' % (filename, filename_matches) + bcolors.ENDC
 
 		# Go search the extension word list file for matches for the extension
-		if len(ext) < 3:
-			print bcolors.RED + '[!]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
-			ext_matches.append(ext.lower())
-		else:
-			if args.v: print bcolors.PURPLE + '[+]  Searching for %s in extension word list' % ext + bcolors.ENDC
-			ext_matches = searchFileForString(ext, exts)
-		if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
+		#if len(ext) < 3:
+		#	print bcolors.RED + '[!]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
+		#	ext_matches.append(ext.lower())
+		#else:
+		#	if args.v: print bcolors.PURPLE + '[+]  Searching for %s in extension word list' % ext + bcolors.ENDC
+		#	ext_matches = searchFileForString(ext, exts)
+		#if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
+
 
 		# Now do the real hard work of cycling through each filename_matches and adding the ext_matches,
 		# do the look up and examine the response codes to see if we found a file.
 		for line in filename_matches:
-			for e in ext_matches:
-				url_to_try = url + line + '.' + e
+			for e in extensions:		# Change back to ext_matches when doing the ext matching
+				test_response_code, test_response_length = '', ''
+
+				url_to_try = url_good + '/' + line + '.' + e.rstrip()
 				url_response = getWebServerResponse(url_to_try)
 
 				# Pull out just the HTTP response code number
@@ -256,16 +321,54 @@ def main():
 				# Here is where we figure out if we found something or just found something odd
 				if test_response_code == response_code['user_code']:
 					print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
-					findings.append(url_to_try + '  - Size ' + test_response_length)
-				elif test_response_code != 404:
-					print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length,url_to_try, url_response) + bcolors.ENDC
+					findings_final.append(url_to_try + '  - Size ' + test_response_length)
+				elif test_response_code != 404 and test_response_code != 400:
+					print '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response)
 					findings_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
 
+	# Match directory names
+	for dir in findings_dir:
+		# Go search the user's word list file for matches for the directory name
+		if args.v: print bcolors.PURPLE + '[+]  Searching for %s in word list' % dir + bcolors.ENDC
+		dir_matches = searchFileForString(dir, args.wordlist)
+
+		# If nothing came back from the search, just try use the original string
+		if not dir_matches:
+			dir_matches.append(dir)
+		if args.v: print bcolors.PURPLE + '[+]  Directory name matches for %s are: %s' % (dir, dir_matches) + bcolors.ENDC
+
+		# Now try to guess the live dir name
+		for match in dir_matches:
+			test_response_code, test_response_length = '', ''
+
+			url_to_try = url_good + '/' + match + '/'
+			url_response = getWebServerResponse(url_to_try)
+
+			# Pull out just the HTTP response code number
+			if hasattr(url_response, 'code'):
+				test_response_code = url_response.code
+				test_response_length = url_response.headers['Content-Length']
+			elif hasattr(url_response, 'getcode'):
+				test_response_code = url_response.getcode()
+				test_response_length = len(url_response.reason())
+			else:
+				test_response_code = 0
+
+			if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
+
+			# Here is where we figure out if we found something or just found something odd
+			if test_response_code == response_code['user_code']:
+				print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
+				findings_final.append(url_to_try + '  - Size ' + test_response_length)
+			elif test_response_code != 404:
+				print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response) + bcolors.ENDC
+				findings_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
+
 	# Output findings
-	if findings:
+	if findings_final:
 		print '\n---------- FINAL OUTPUT ------------------------------'
 		print bcolors.GREEN + '[*]  We found files for you to look at' + bcolors.ENDC
-		for out in sorted(findings):
+		for out in sorted(findings_final):
 			print '[*]  %s' % out
 	else:
 		print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
