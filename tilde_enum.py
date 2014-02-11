@@ -23,13 +23,15 @@ headers = { 'User-Agent' : 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; 
 # Targets is the list of files from the scanner output
 targets = []
 
-# Findings is the list of URLs that may be  `good on the web site
+# Findings is the list of URLs that may be good on the web site
+# TODO - Are all of these really necessary?
 findings_file =  {}		# Files discovered
-findings_dir =   [] 	# Directories discovered
 findings_other = []  	# HTTP Response Codes other than 200
 findings_final = []		# Where the guessed files are output
-findings_dir_final = []
-findings_dir_other_final = []
+findings_dir =   [] 	# Directories discovered
+findings_dir_other =  		[]
+findings_dir_final = 		[]
+findings_dir_other_final =  []
 
 # Location of the extension brute force word list
 exts = 'exts'
@@ -157,6 +159,24 @@ def checkForTildeVuln(url):
 
 	return check_string
 
+def findExtension(url, dir, file):
+	# This only works for extensions of 3+ chars
+	# TODO - make it work with < 3 char EXTs
+	for char1 in chars:
+		resp1 = getWebServerResponse(url+dir+file+'~1.'+char1+'%3f%3f/.aspx')
+
+		if resp1.code == 404:  # Got the first valid char
+
+			for char2 in chars:
+				resp2 = getWebServerResponse(url+dir+file+'~1.'+char1+char2+'%3f/.aspx')
+				if resp2.code == 404:  # Got the second valid char
+
+					for char3 in chars:
+						resp3 = getWebServerResponse(url+dir+file+'~1.'+char1+char2+char3+'/.aspx')
+
+						if resp3.code == 404:  # Got the third valid char
+							print bcolors.YELLOW + '[+]  Found extension: ' + file+' . '+char1+char2+char3 + bcolors.ENDC
+							return file+'.'+char1+char2+char3
 
 def checkEightDotThreeEnum(url, check_string, dir='/'):
 	# Here is where we find the files and dirs using the 404 and 400 errors
@@ -209,50 +229,14 @@ def checkEightDotThreeEnum(url, check_string, dir='/'):
 														findings_dir.append(char+char2+char3+char4+char5+char6)
 													else:
 														print bcolors.YELLOW + '[+]  Found a new file: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
-														files.append(char+char2+char3+char4+char5+char6)
 
+														# Now that we have the file name, go get the extension
+														file = findExtension(url, dir, char+char2+char3+char4+char5+char6)
+														files.append(file)
+
+	# Store the file in a dictionary by directory. This will be important in the future when we do recursive tests
 	findings_file[dir] = files
 
-	#### This extension stuff is not working!!!! ###
-	# Now that we have the file names, we have to find their extensions
-	# Need to check after each to find out if there is another char
-	for file in findings_file[dir]:
-		print bcolors.GREEN + 'Looking for extensions for %s' % file
-
-		# Check how many chars are in the extension
-		Threechar_ext = getWebServerResponse(url+dir+file+'~1.%3f%3f%3f/.aspx')
-
-		if Threechar_ext.code == 404:	# At least 1 character in ext
-			resp2 = getWebServerResponse(url+dir+file+'~1.%3f%3f/.aspx')
-			if resp2.code == 400:	# At least 2 characters in ext
-				resp3 = getWebServerResponse(url+dir+file+'~1.%3f%3f%3f/.aspx')
-				if resp3.code == 400:	# At least 3 characters in ext
-					print '    %s has a 3 char extension' % file
-				else:
-					print '    %s has a 2 char extension' % file
-			else:
-				print '    %s has a 1 char extension' % file
-		else:
-			print '    %s has no extension' % file
-
-
-
-		'''for char1 in chars:
-			resp1 = getWebServerResponse(url+dir+file+'~1.'+char1+'/.aspx')
-			print url+dir+file+'~1.'+char1+'/.aspx'
-			print char1,resp1.code
-
-
-			if resp1.code == 404:  # Got the first valid char
-				for char2 in chars:
-					resp2 = getWebServerResponse(url+dir+file+'~1.'+char1+char2+'/.aspx')
-
-					if resp2.code == 404:  # Got the second valid char
-						for char3 in chars:
-							resp3 = getWebServerResponse(url+dir+file+'~1.'+char1+char2+char3+'/.aspx')
-
-							if resp3.code == 404:  # Got the third valid char
-								print file+' . '+char1+char2+char3'''
 
 	findings['files'] = findings_file
 	findings['dirs'] = sorted(findings_dir)
@@ -288,9 +272,6 @@ def main():
 	#for dir in findings['dirs']:
 	#	findings = checkEightDotThreeEnum(url_good, check_string, dir)
 
-	sys.exit()
-
-
 
 	# Start the URL requests to the server
 	print bcolors.GREEN + '[-]  Now starting the word guessing using word list calls' + bcolors.ENDC
@@ -306,59 +287,61 @@ def main():
 
 	# So the URL is live and gives 200s back (otherwise script would have exit'd)
     # Find matches to the filename in our word list
-	for filename in findings_file:
+	for dir in findings['files'].keys():
+		ext_matches= []
+		for filename in findings['files'][dir]:
 
-		# Break apart the file into filename and extension
-		#filename, ext_temp = os.path.splitext(file)
-		#ext = ext_temp.lstrip('.')
+			# Break apart the file into filename and extension
+			filename, ext_temp = os.path.splitext(filename)
+			ext = ext_temp.lstrip('.')
 
-		# Go search the user's word list file for matches for the file
-		if args.v: print bcolors.PURPLE + '[+]  Searching for %s in word list' % filename + bcolors.ENDC
-		filename_matches = searchFileForString(filename, args.wordlist)
+			# Go search the user's word list file for matches for the file
+			print bcolors.GREEN + '[+]  Searching for %s in word list' % filename + bcolors.ENDC
+			filename_matches = searchFileForString(filename, args.wordlist)
 
-		# If nothing came back from the search, just try use the original string
-		if not filename_matches:
-			filename_matches.append(filename)
-		if args.v: print bcolors.PURPLE + '[+]  File name matches for %s are: %s' % (filename, filename_matches) + bcolors.ENDC
+			# If nothing came back from the search, just try use the original string
+			if not filename_matches:
+				filename_matches.append(filename)
+			if args.v: print bcolors.PURPLE + '[+]  File name matches for %s are: %s' % (filename, filename_matches) + bcolors.ENDC
 
-		# Go search the extension word list file for matches for the extension
-		#if len(ext) < 3:
-		#	print bcolors.RED + '[!]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
-		#	ext_matches.append(ext.lower())
-		#else:
-		#	if args.v: print bcolors.PURPLE + '[+]  Searching for %s in extension word list' % ext + bcolors.ENDC
-		#	ext_matches = searchFileForString(ext, exts)
-		#if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
+			# Go search the extension word list file for matches for the extension
+			if len(ext) < 3:
+				print bcolors.RED + '[!]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
+				ext_matches.append(ext.lower())
+			else:
+				print bcolors.GREEN + '[+]  Searching for %s in extension word list' % ext + bcolors.ENDC
+				ext_matches = searchFileForString(ext, exts)
+			if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
 
 
-		# Now do the real hard work of cycling through each filename_matches and adding the ext_matches,
-		# do the look up and examine the response codes to see if we found a file.
-		for line in filename_matches:
-			for e in extensions:		# Change back to ext_matches when doing the ext matching
-				test_response_code, test_response_length = '', ''
+			# Now do the real hard work of cycling through each filename_matches and adding the ext_matches,
+			# do the look up and examine the response codes to see if we found a file.
+			for line in filename_matches:
+				for e in extensions:		# Change back to ext_matches when doing the ext matching
+					test_response_code, test_response_length = '', ''
 
-				url_to_try = url_good + '/' + line + '.' + e.rstrip()
-				url_response = getWebServerResponse(url_to_try)
+					url_to_try = url_good + '/' + line + '.' + e.rstrip()
+					url_response = getWebServerResponse(url_to_try)
 
-				# Pull out just the HTTP response code number
-				if hasattr(url_response, 'code'):
-					test_response_code = url_response.code
-					test_response_length = url_response.headers['Content-Length']
-				elif hasattr(url_response, 'getcode'):
-					test_response_code = url_response.getcode()
-					test_response_length = len(url_response.reason())
-				else:
-					test_response_code = 0
+					# Pull out just the HTTP response code number
+					if hasattr(url_response, 'code'):
+						test_response_code = url_response.code
+						test_response_length = url_response.headers['Content-Length']
+					elif hasattr(url_response, 'getcode'):
+						test_response_code = url_response.getcode()
+						test_response_length = len(url_response.reason())
+					else:
+						test_response_code = 0
 
-				if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
+					if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
 
-				# Here is where we figure out if we found something or just found something odd
-				if test_response_code == response_code['user_code']:
-					print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
-					findings_final.append(url_to_try + '  - Size ' + test_response_length)
-				elif test_response_code != 404 and test_response_code != 400:
-					print '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response)
-					findings_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
+					# Here is where we figure out if we found something or just found something odd
+					if test_response_code == response_code['user_code']:
+						print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
+						findings_final.append(url_to_try + '  - Size ' + test_response_length)
+					elif test_response_code != 404 and test_response_code != 400:
+						print '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response)
+						findings_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
 
 	# Match directory names
 	for dir in findings_dir:
