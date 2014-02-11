@@ -306,7 +306,7 @@ def main():
 
 			# Go search the extension word list file for matches for the extension
 			if len(ext) < 3:
-				print bcolors.RED + '[!]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
+				print '[-]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext
 				ext_matches.append(ext.lower())
 			else:
 				print bcolors.GREEN + '[+]  Searching for %s in extension word list' % ext + bcolors.ENDC
@@ -317,7 +317,7 @@ def main():
 			# Now do the real hard work of cycling through each filename_matches and adding the ext_matches,
 			# do the look up and examine the response codes to see if we found a file.
 			for line in filename_matches:
-				for e in extensions:		# Change back to ext_matches when doing the ext matching
+				for e in ext_matches:
 					test_response_code, test_response_length = '', ''
 
 					url_to_try = url_good + '/' + line + '.' + e.rstrip()
@@ -384,26 +384,33 @@ def main():
 	# Output findings
 	if findings_final:
 		print '\n---------- FINAL OUTPUT ------------------------------'
-		print bcolors.GREEN + '[*]  We found files for you to look at' + bcolors.ENDC
+		print bcolors.YELLOW + '[*]  We found files for you to look at' + bcolors.ENDC
 		for out in sorted(findings_final):
-			print '[*]  %s' % out
+			print '[*]      %s' % out
 	else:
 		print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
 
+	print bcolors.YELLOW + '\n[*]  Here are all the 8.3 names we found' + bcolors.ENDC
+	for dir in findings['files'].keys():
+		for filename in sorted(findings['files'][dir]):
+			# Break apart the file into filename and extension
+			filename, ext = os.path.splitext(filename)
+			print '[*]      %s%s%s~1%s' % (url_good, dir, filename, ext)
+
 	if findings_dir_final:
-		print bcolors.GREEN + '[*]  We found directories for you to look at' + bcolors.ENDC
+		print bcolors.YELLOW + '[*]  We found directories for you to look at' + bcolors.ENDC
 		for out in sorted(findings_dir_final):
-			print '[*]  %s' % out
+			print '[*]      %s' % out
 
 	if findings_other:
-		print bcolors.GREEN + '\n[*]  We found URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
+		print bcolors.YELLOW + '\n[*]  We found URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
 		for out in sorted(findings_other):
-			print '[?]  %s' % out
+			print '[?]      %s' % out
 
 	if findings_dir_other:
-		print bcolors.GREEN + '\n[*]  We found directory URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
+		print bcolors.YELLOW + '\n[*]  We found directory URLs you should check out. They were not HTTP response code 200s.' + bcolors.ENDC
 		for out in sorted(findings_dir_other):
-			print '[?]  %s' % out
+			print '[?]      %s' % out
 
 
 #=================================================
