@@ -28,6 +28,8 @@ findings_file =  []		# Files discovered
 findings_dir =   [] 	# Directories discovered
 findings_other = []  	# HTTP Response Codes other than 200
 findings_final = []		# Where the guessed files are output
+findings_dir_final = []
+findings_dir_other_final = []
 
 # Location of the extension brute force word list
 exts = 'exts'
@@ -214,6 +216,8 @@ def main():
 														print bcolors.YELLOW + '[+]  Found a new file: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
 														findings_file.append(char+char2+char3+char4+char5+char6)
 
+
+	#### This extension stuff is not working!!!! ###
 	# Now that we have the file names, we have to find their extensions
 	# Need to check after each to find out if there is another char
 	'''for file in findings_file:
@@ -359,10 +363,10 @@ def main():
 			# Here is where we figure out if we found something or just found something odd
 			if test_response_code == response_code['user_code']:
 				print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
-				findings_final.append(url_to_try + '  - Size ' + test_response_length)
-			elif test_response_code != 404:
+				findings_dir_final.append(url_to_try + '  - Size ' + test_response_length)
+			elif test_response_code != 404 and test_response_code != 0:
 				print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response) + bcolors.ENDC
-				findings_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
+				findings_dir_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
 
 	# Output findings
 	if findings_final:
@@ -372,9 +376,20 @@ def main():
 			print '[*]  %s' % out
 	else:
 		print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
+
+	if findings_dir_final:
+		print bcolors.GREEN + '[*]  We found directories for you to look at' + bcolors.ENDC
+		for out in sorted(findings_dir_final):
+			print '[*]  %s' % out
+
 	if findings_other:
 		print bcolors.GREEN + '\n[*]  We found URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
 		for out in sorted(findings_other):
+			print '[?]  %s' % out
+
+	if findings_dir_other:
+		print bcolors.GREEN + '\n[*]  We found directory URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
+		for out in sorted(findings_dir_other):
 			print '[?]  %s' % out
 
 
@@ -385,8 +400,7 @@ def main():
 # Command Line Arguments
 parser = argparse.ArgumentParser(description='Expands the file names found from the tilde enumeration vuln')
 parser.add_argument('-b', action='store_true', default=False, help='brute force backup extension, extensions')
-parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
-#parser.add_argument('scan_file_to_parse', type=file, help='the java scanner file that you want parsed')
+parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')q
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
 parser.add_argument('wordlist', help='the wordlist file')
