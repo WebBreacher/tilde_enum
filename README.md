@@ -33,8 +33,8 @@ optional arguments:
 Sample Output
 ======
 <pre>
-$  ./tilde_enum.py -u http://iis /pentest/fuzzdb/discovery/PredictableRes/raft-large-words-lowercase.txt
-[-]  Testing with dummy file request http://iis/7yC9fvCEK3.htm
+$  ./tilde_enum.py -u http://iis /pentest/fuzzdb/discovery/PredictableRes/raft-small-words-lowercase.txt
+[-]  Testing with dummy file request http://iis/BgLWKLNKUm.htm
 [-]	URLNotThere -> HTTP Code: 404, Response Length: 1635
 [-]  Testing with user-submitted http://iis
 [-]	URLUser -> HTTP Code: 200, Response Length: 1433
@@ -44,8 +44,10 @@ $  ./tilde_enum.py -u http://iis /pentest/fuzzdb/discovery/PredictableRes/raft-l
 [+]  Found a new directory: copyof
 [+]  Found file:  dqa5e5 . htm
 [+]  Found file:  eee . htm
+[+]  Found a new directory: javasc
 [+]  Found file:  parame . xml
 [+]  Found file:  passwo . x
+[+]  Found a new directory: php_so
 [+]  Found file:  postin . htm
 [+]  Found file:  server . ht
 [+]  Found file:  2ac185 . htm
@@ -61,7 +63,7 @@ $  ./tilde_enum.py -u http://iis /pentest/fuzzdb/discovery/PredictableRes/raft-l
 [-]  Now starting the word guessing using word list calls
 [+]  Searching for dqa5e5 in word list
 [+]  Searching for htm in extension word list
-[!]  File name (eee) too short to look up in word list. We will use it to bruteforce.
+[-]  File name (eee) too  to look up in word list. We will use it to bruteforce.
 [+]  Searching for htm in extension word list
 [*]  Found one! (Size 8) http://iis/eee.html
 [+]  Searching for parame in word list
@@ -69,19 +71,19 @@ $  ./tilde_enum.py -u http://iis /pentest/fuzzdb/discovery/PredictableRes/raft-l
 [*]  Found one! (Size 1307) http://iis/parameters.xml
 [*]  Found one! (Size 1307) http://iis/parameter.xml
 [+]  Searching for passwo in word list
-[!]  Extension (x) too short to look up in word list. We will use it to bruteforce.
+[-]  Extension (x) too short to look up in word list. We will use it to bruteforce.
 [*]  Found one! (Size 198) http://iis/passwords.x
 [+]  Searching for postin in word list
 [+]  Searching for htm in extension word list
 [*]  Found one! (Size 2449) http://iis/postinfo.html
 [+]  Searching for server in word list
-[!]  Extension (ht) too short to look up in word list. We will use it to bruteforce.
+[-]  Extension (ht) too short to look up in word list. We will use it to bruteforce.
 [+]  Searching for 2ac185 in word list
 [+]  Searching for htm in extension word list
-[!]  File name (321) too short to look up in word list. We will use it to bruteforce.
+[-]  File name (321) too  to look up in word list. We will use it to bruteforce.
 [+]  Searching for xls in extension word list
 [*]  Found one! (Size 227) http://iis/321.xlsx
-[!]  File name (4321) too short to look up in word list. We will use it to bruteforce.
+[-]  File name (4321) too  to look up in word list. We will use it to bruteforce.
 [+]  Searching for htm in extension word list
 [*]  Found one! (Size 227) http://iis/4321.html
 [+]  Searching for 654321 in word list
@@ -95,7 +97,9 @@ $  ./tilde_enum.py -u http://iis /pentest/fuzzdb/discovery/PredictableRes/raft-l
 [+]  Searching for _vti_i in word list
 [+]  Searching for htm in extension word list
 [*]  Found one! (Size 1754) http://iis/_vti_inf.html
+[-]  Trying to find directory matches now.
 [?]  URL: (Size 218) http://iis/aspnet_client/ with Response: HTTP Error 403: Forbidden 
+[?]  URL: (Size 218) http://iis/javascript/ with Response: HTTP Error 403: Forbidden 
 
 ---------- FINAL OUTPUT ------------------------------
 [*]  We found files for you to look at
@@ -108,9 +112,9 @@ $  ./tilde_enum.py -u http://iis /pentest/fuzzdb/discovery/PredictableRes/raft-l
 [*]      http://iis/passwords.x  - Size 198
 [*]      http://iis/postinfo.html  - Size 2449
 
-[*]  Here are all the 8.3 names we found
+[*]  Here are all the 8.3 names we found.
 [*]  If any of these are 6 chars and look like they should work,
-      try the file name with 1 or 2 chars instead of all of them.
+        try the file name with the first or second instead of all of them.
 [*]      http://iis/2ac185~1.htm
 [*]      http://iis/321~1.xls
 [*]      http://iis/4321~1.htm
@@ -126,6 +130,14 @@ $  ./tilde_enum.py -u http://iis /pentest/fuzzdb/discovery/PredictableRes/raft-l
 [*]      http://iis/postin~1.htm
 [*]      http://iis/server~1.ht
 
+[*]  Here are all the directory names we found. You may wish to try to guess them yourself too.
+[*]      http://iis/_vti_s/
+[*]      http://iis/aspnet/
+[*]      http://iis/copyof/
+[*]      http://iis/javasc/
+[*]      http://iis/php_so/
+
 [*]  We found directory URLs you should check out. They were not HTTP response code 200s.
 [?]      HTTP Resp 403 - http://iis/aspnet_client/  - Size 218
+[?]      HTTP Resp 403 - http://iis/javascript/  - Size 218
 </pre>
