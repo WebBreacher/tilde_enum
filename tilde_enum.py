@@ -159,24 +159,43 @@ def checkForTildeVuln(url):
 
 	return check_string
 
+
 def findExtension(url, dir, file):
-	# This only works for extensions of 3+ chars
-	# TODO - make it work with < 3 char EXTs
-	for char1 in chars:
-		resp1 = getWebServerResponse(url+dir+file+'~1.'+char1+'%3f%3f/.aspx')
+	# Find out how many chars the extension has
+	resp1 = getWebServerResponse(url+dir+file+'~1.%3f/.aspx')		# 1 extension chars
+	resp2 = getWebServerResponse(url+dir+file+'~1.%3f%3f/.aspx')	# 2 extension chars
+	resp3 = getWebServerResponse(url+dir+file+'~1.%3f%3f%3f/.aspx')	# 3+ extension chars
 
-		if resp1.code == 404:  # Got the first valid char
+	if resp1.code == 404:
+		for char1 in chars:
+			resp1a = getWebServerResponse(url+dir+file+'~1.'+char1+'%3f%3f/.aspx')
+			if resp1a.code == 404:  # Got the first valid char
+				print bcolors.YELLOW + '[+]  Found extension:  ' + file+' . '+char1+bcolors.ENDC
+				return file+'.'+char1
 
-			for char2 in chars:
-				resp2 = getWebServerResponse(url+dir+file+'~1.'+char1+char2+'%3f/.aspx')
-				if resp2.code == 404:  # Got the second valid char
+	elif resp1.code == 500 and resp2.code == 404:
+		for char1 in chars:
+			resp1a = getWebServerResponse(url+dir+file+'~1.'+char1+'%3f%3f/.aspx')
+			if resp1a.code == 404:  # Got the first valid char
+				for char2 in chars:
+					resp2a = getWebServerResponse(url+dir+file+'~1.'+char1+char2+'%3f/.aspx')
+					if resp2a.code == 404:  # Got the second valid char
+						print bcolors.YELLOW + '[+]  Found extension:  ' +file+' . '+char1+char2+bcolors.ENDC
+						return file+'.'+char1+char2
 
-					for char3 in chars:
-						resp3 = getWebServerResponse(url+dir+file+'~1.'+char1+char2+char3+'/.aspx')
+	elif resp1.code == 500 and resp2.code == 500 and resp3.code == 404:
+		for char1 in chars:
+			resp1a = getWebServerResponse(url+dir+file+'~1.'+char1+'%3f%3f/.aspx')
+			if resp1a.code == 404:  # Got the first valid char
+				for char2 in chars:
+					resp2a = getWebServerResponse(url+dir+file+'~1.'+char1+char2+'%3f/.aspx')
+					if resp2a.code == 404:  # Got the second valid char
+						for char3 in chars:
+							resp3a = getWebServerResponse(url+dir+file+'~1.'+char1+char2+char3+'%3f/.aspx')
+							if resp3a.code == 404:  # Got the third valid char
+								print bcolors.YELLOW + '[+]  Found extension:  ' +file+' . '+char1+char2+char3+bcolors.ENDC
+								return file+'.'+char1+char2+char3
 
-						if resp3.code == 404:  # Got the third valid char
-							print bcolors.YELLOW + '[+]  Found extension: ' + file+' . '+char1+char2+char3 + bcolors.ENDC
-							return file+'.'+char1+char2+char3
 
 def checkEightDotThreeEnum(url, check_string, dir='/'):
 	# Here is where we find the files and dirs using the 404 and 400 errors
@@ -185,20 +204,28 @@ def checkEightDotThreeEnum(url, check_string, dir='/'):
 	files = []
 
 	for char in chars:
-		resp = getWebServerResponse(url+dir+char+check_string)
-		if resp.code == 404:  # Got the first valid char
+		resp1 = getWebServerResponse(url+dir+char+check_string)
+		if resp1.code == 404:  # Got the first valid char
+			# Check to see if the word is longer than just this char
+			resp1a = getWebServerResponse(url+dir+char+'~1*/.aspx')					# 1 filename chars
+			resp2 = getWebServerResponse(url+dir+char+'%3f~1*/.aspx')				# 2 filename chars
+			resp3 = getWebServerResponse(url+dir+char+'%3f%3f~1*/.aspx')				# 3 filename chars
+			resp4 = getWebServerResponse(url+dir+char+'%3f%3f%3f~1*/.aspx')			# 4 filename chars
+			resp5 = getWebServerResponse(url+dir+char+'%3f%3f%3f%3f~1*/.aspx')		# 5 filename chars
+			resp6 = getWebServerResponse(url+dir+char+'%3f%3f%3f%3f%3f~1*/.aspx')	# 6+ filename chars
+
+			print '1st letter %s' % char
+			print resp1a.code, resp2.code, resp3.code, resp4.code, resp5.code, resp6.code
 
 
-			'''resp_len = getWebServerResponse(url+dir+char+'%3f'+check_string)
+			resp_len = getWebServerResponse(url+dir+char+'%3f'+check_string)
 			if resp_len.code == 404:
 				print 'Another char -> ' + url+dir+char+'%3f'+check_string, resp_len.code
 			elif resp_len.code == 400:
-				print 'That is long enough -> ' + url+dir+char+'%3f'+check_string, resp_len.code'''
-
-		# I think one of the issues is that I'm not checking at each # placeholder for if the file is done
-		# Only the files that make it to the 6th char are added to the list
-		# At each level I should check to see if there is another char (%3f) and if not, add that value
-		# to the findings and then continue
+				print 'That is long enough -> ' + url+dir+char+'%3f'+check_string, resp_len.code
+				file = findExtension(url, dir, char)
+				files.append(file)
+				continue
 
 
 			for char2 in chars:
@@ -227,12 +254,33 @@ def checkEightDotThreeEnum(url, check_string, dir='/'):
 													if resp6_dir.code == 404:
 														print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
 														findings_dir.append(char+char2+char3+char4+char5+char6)
-													else:
+													elif resp6.code != 500:
 														print bcolors.YELLOW + '[+]  Found a new file: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
 
 														# Now that we have the file name, go get the extension
 														file = findExtension(url, dir, char+char2+char3+char4+char5+char6)
 														files.append(file)
+						'''elif resp3.code == 400:
+							print bcolors.YELLOW + '[+]  Found a new file: ' +char + char2 + char3 + bcolors.ENDC
+
+							# Now that we have the file name, go get the extension
+							file = findExtension(url, dir, char + char2 + char3)
+							files.append(file)
+
+				elif resp2.code == 400:
+					print bcolors.YELLOW + '[+]  Found a new file: ' +char + char2 + bcolors.ENDC
+
+					# Now that we have the file name, go get the extension
+					file = findExtension(url, dir, char + char2)
+					files.append(file)
+
+		elif resp1.code == 400:
+			print bcolors.YELLOW + '[+]  Found a new file: ' +char + bcolors.ENDC
+
+			# Now that we have the file name, go get the extension
+			file = findExtension(url, dir, char)
+			files.append(file)'''
+
 
 	# Store the file in a dictionary by directory. This will be important in the future when we do recursive tests
 	findings_file[dir] = files
@@ -264,14 +312,16 @@ def main():
 	# Do the initial search for files in the root of the web server
 	findings = checkEightDotThreeEnum(url_good, check_string)
 
-	print 'Files: %s' % findings['files'] #debug
-	print 'Dirs: %s' %  findings['dirs'] #debug
+	if args.v:
+		print bcolors.PURPLE + 'Files: %s' % findings['files']
+		print 'Dirs: %s' %  findings['dirs'] + bcolors.ENDC
 
-	# TODO - now that we have all the findings, repeat the above step with any findings that are directories and add those findings to the list
+
+	# TODO - Directory recursion
+	# Now that we have all the findings, repeat the above step with any findings that are directories and add those findings to the list
 	# Wait to implement this as we'll have to go through and look up these 6 char words in another wordlist
 	#for dir in findings['dirs']:
 	#	findings = checkEightDotThreeEnum(url_good, check_string, dir)
-
 
 	# Start the URL requests to the server
 	print bcolors.GREEN + '[-]  Now starting the word guessing using word list calls' + bcolors.ENDC
@@ -296,7 +346,7 @@ def main():
 			ext = ext_temp.lstrip('.')
 
 			# Go search the user's word list file for matches for the file
-			print bcolors.GREEN + '[+]  Searching for %s in word list' % filename + bcolors.ENDC
+			print '[+]  Searching for %s in word list' % filename
 			filename_matches = searchFileForString(filename, args.wordlist)
 
 			# If nothing came back from the search, just try use the original string
@@ -309,7 +359,7 @@ def main():
 				print '[-]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext
 				ext_matches.append(ext.lower())
 			else:
-				print bcolors.GREEN + '[+]  Searching for %s in extension word list' % ext + bcolors.ENDC
+				print '[+]  Searching for %s in extension word list' % ext
 				ext_matches = searchFileForString(ext, exts)
 			if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
 
