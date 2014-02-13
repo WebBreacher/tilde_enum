@@ -342,7 +342,7 @@ def main():
 
 			# Go search the user's word list file for matches for the file
 			if len(filename) < 6:
-				print bcolors.GREEN + '[!]  File name (%s) too short to look up in word list. We will use it to bruteforce.' % filename + bcolors.ENDC
+				print bcolors.GREEN + '[-]  File name (%s) too  to look up in word list. We will use it to bruteforce.' % filename + bcolors.ENDC
 				filename_matches.append(filename)
 			else:
 				print '[+]  Searching for %s in word list' % filename
@@ -355,7 +355,7 @@ def main():
 
 			# Go search the extension word list file for matches for the extension
 			if len(ext) < 3:
-				print bcolors.GREEN + '[!]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
+				print bcolors.GREEN + '[-]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
 				ext_matches.append(ext.lower())
 			else:
 				print '[+]  Searching for %s in extension word list' % ext
@@ -392,8 +392,10 @@ def main():
 						print '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response)
 						findings_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
 
+
 	# Match directory names
-	for dir in findings_dir:
+	print bcolors.GREEN + '[-]  Trying to find directory matches now.' + bcolors.ENDC
+	for dir in findings['dirs']:
 		# Go search the user's word list file for matches for the directory name
 		if args.v: print bcolors.PURPLE + '[+]  Searching for %s in word list' % dir + bcolors.ENDC
 		dir_matches = searchFileForString(dir, args.wordlist)
@@ -435,7 +437,7 @@ def main():
 		print '\n---------- FINAL OUTPUT ------------------------------'
 		print bcolors.YELLOW + '[*]  We found files for you to look at' + bcolors.ENDC
 		for out in sorted(findings_final):
-			print '[*]      %s' % out
+			print bcolors.CYAN + '[*]      %s' % out + bcolors.ENDC
 	else:
 		print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
 
@@ -451,6 +453,11 @@ def main():
 		print bcolors.YELLOW + '[*]  We found directories for you to look at' + bcolors.ENDC
 		for out in sorted(findings_dir_final):
 			print '[*]      %s' % out
+
+	print bcolors.YELLOW + '\n[*]  Here are all the directory names we found. You may wish to try to guess them yourself too.' + bcolors.ENDC
+	for dir in sorted(findings['dirs']):
+		print '[*]      %s/%s/' % (url_good, dir)
+
 
 	if findings_other:
 		print bcolors.YELLOW + '\n[*]  We found URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
