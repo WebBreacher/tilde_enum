@@ -36,8 +36,8 @@ findings_dir_other_final =  []
 # Location of the extension brute force word list
 exts = 'exts'
 
-# Character set to use for brute forcing ([0-9][a-z]_- )
-chars = 'taoeiwnshrdlcumfgypbvkjxqz1234567890-_'
+# Character set to use for brute forcing ([0-9][a-z]_-. )
+chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_. '
 
 # Response codes - user and error
 response_code = {}
@@ -170,7 +170,7 @@ def findExtension(url, dir, file):
 		for char1 in chars:
 			resp1a = getWebServerResponse(url+dir+file+'~1.'+char1+'%3f%3f/.aspx')
 			if resp1a.code == 404:  # Got the first valid char
-				print bcolors.YELLOW + '[+]  Found extension:  ' + file+' . '+char1+bcolors.ENDC
+				print bcolors.YELLOW + '[+]  Found file:  ' + file+' . '+char1+bcolors.ENDC
 				return file+'.'+char1
 
 	elif resp1.code == 500 and resp2.code == 404:
@@ -180,7 +180,7 @@ def findExtension(url, dir, file):
 				for char2 in chars:
 					resp2a = getWebServerResponse(url+dir+file+'~1.'+char1+char2+'%3f/.aspx')
 					if resp2a.code == 404:  # Got the second valid char
-						print bcolors.YELLOW + '[+]  Found extension:  ' +file+' . '+char1+char2+bcolors.ENDC
+						print bcolors.YELLOW + '[+]  Found file:  ' +file+' . '+char1+char2+bcolors.ENDC
 						return file+'.'+char1+char2
 
 	elif resp1.code == 500 and resp2.code == 500 and resp3.code == 404:
@@ -193,40 +193,37 @@ def findExtension(url, dir, file):
 						for char3 in chars:
 							resp3a = getWebServerResponse(url+dir+file+'~1.'+char1+char2+char3+'%3f/.aspx')
 							if resp3a.code == 404:  # Got the third valid char
-								print bcolors.YELLOW + '[+]  Found extension:  ' +file+' . '+char1+char2+char3+bcolors.ENDC
+								print bcolors.YELLOW + '[+]  Found file:  ' +file+' . '+char1+char2+char3+bcolors.ENDC
 								return file+'.'+char1+char2+char3
+
+
+def checkForDirectory(url):
+	resp = getWebServerResponse(url+'~1/.aspx')
+	if resp.code == 404:
+		return True
+	else:
+		return False
 
 
 def checkEightDotThreeEnum(url, check_string, dir='/'):
 	# Here is where we find the files and dirs using the 404 and 400 errors
 	# If the dir var is not passed then we assume this is the root level of the server
+
+	# TODO - 1 and 2 char file names report back same as 6+ char names.
 	findings = {}
 	files = []
 
 	for char in chars:
 		resp1 = getWebServerResponse(url+dir+char+check_string)
 		if resp1.code == 404:  # Got the first valid char
+
 			# Check to see if the word is longer than just this char
-			resp1a = getWebServerResponse(url+dir+char+'~1*/.aspx')					# 1 filename chars
-			resp2 = getWebServerResponse(url+dir+char+'%3f~1*/.aspx')				# 2 filename chars
-			resp3 = getWebServerResponse(url+dir+char+'%3f%3f~1*/.aspx')				# 3 filename chars
-			resp4 = getWebServerResponse(url+dir+char+'%3f%3f%3f~1*/.aspx')			# 4 filename chars
-			resp5 = getWebServerResponse(url+dir+char+'%3f%3f%3f%3f~1*/.aspx')		# 5 filename chars
-			resp6 = getWebServerResponse(url+dir+char+'%3f%3f%3f%3f%3f~1*/.aspx')	# 6+ filename chars
-
-			print '1st letter %s' % char
-			print resp1a.code, resp2.code, resp3.code, resp4.code, resp5.code, resp6.code
-
-
-			resp_len = getWebServerResponse(url+dir+char+'%3f'+check_string)
-			if resp_len.code == 404:
-				print 'Another char -> ' + url+dir+char+'%3f'+check_string, resp_len.code
-			elif resp_len.code == 400:
-				print 'That is long enough -> ' + url+dir+char+'%3f'+check_string, resp_len.code
-				file = findExtension(url, dir, char)
-				files.append(file)
-				continue
-
+			length_gauge2 = getWebServerResponse(url+dir+char+'~1*/.aspx')					# 2 char filename
+			length_gauge3 = getWebServerResponse(url+dir+char+'%3f~1*/.aspx')				# 3 char filename
+			length_gauge4 = getWebServerResponse(url+dir+char+'%3f%3f~1*/.aspx')			# 4 char filename
+			length_gauge5 = getWebServerResponse(url+dir+char+'%3f%3f%3f~1*/.aspx')			# 5 char filename
+			length_gauge6 = getWebServerResponse(url+dir+char+'%3f%3f%3f%3f~1*/.aspx')		# 6 char filename
+			length_gauge7 = getWebServerResponse(url+dir+char+'%3f%3f%3f%3f%3f~1*/.aspx')	# 7 char filename
 
 			for char2 in chars:
 				resp2 = getWebServerResponse(url+dir+char+char2+check_string)
@@ -236,55 +233,60 @@ def checkEightDotThreeEnum(url, check_string, dir='/'):
 						resp3 = getWebServerResponse(url+dir+char+char2+char3+check_string)
 
 						if resp3.code == 404:  # Got the third valid char
-							for char4 in chars:
-								resp4 = getWebServerResponse(url+dir+char+char2+char3+char4+check_string)
+							if length_gauge4.code == 404:
+								if checkForDirectory(url+dir+char+char2+char3):
+									print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3 + bcolors.ENDC
+									findings_dir.append(char+char2+char3)
+								else:
+									# Now that we have the file name, go get the extension
+									file = findExtension(url, dir, char+char2+char3)
+									files.append(file)
+									continue
+							else:
+								for char4 in chars:
+									resp4 = getWebServerResponse(url+dir+char+char2+char3+char4+check_string)
 
-								if resp4.code == 404:  # Got the fourth valid char
-									for char5 in chars:
-										resp5 = getWebServerResponse(url+dir+char+char2+char3+char4+char5+check_string)
+									if resp4.code == 404:  # Got the fourth valid char
+										if length_gauge5.code == 404:
+											if checkForDirectory(url+dir+char+char2+char3+char4):
+												print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4 + bcolors.ENDC
+												findings_dir.append(char+char2+char3+char4)
+											else:
+												# Now that we have the file name, go get the extension
+												file = findExtension(url, dir, char+char2+char3+char4)
+												files.append(file)
+												continue
+										else:
+											for char5 in chars:
+												resp5 = getWebServerResponse(url+dir+char+char2+char3+char4+char5+check_string)
 
-										if resp5.code == 404:  # Got the fifth valid char
-											for char6 in chars:
-												resp6 = getWebServerResponse(url+dir+char+char2+char3+char4+char5+char6+check_string)
+												if resp5.code == 404:  # Got the fifth valid char
+													if length_gauge5.code == 404:
+														if checkForDirectory(url+dir+char+char2+char3+char4+char5):
+															print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5 + bcolors.ENDC
+															findings_dir.append(char+char2+char3+char4+char5)
+														else:
+															# Now that we have the file name, go get the extension
+															file = findExtension(url, dir, char+char2+char3+char4+char5)
+															files.append(file)
+															continue
+													else:
+														if resp5.code == 404:  # Got the fifth valid char
+															for char6 in chars:
+																resp6 = getWebServerResponse(url+dir+char+char2+char3+char4+char5+char6+check_string)
 
-												if resp6.code == 404:  # Got the sixth valid char
-
-													# Check to see if this is a directory or file
-													resp6_dir = getWebServerResponse(url+dir+char+char2+char3+char4+char5+char6+'~1/.aspx')
-													if resp6_dir.code == 404:
-														print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
-														findings_dir.append(char+char2+char3+char4+char5+char6)
-													elif resp6.code != 500:
-														print bcolors.YELLOW + '[+]  Found a new file: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
-
-														# Now that we have the file name, go get the extension
-														file = findExtension(url, dir, char+char2+char3+char4+char5+char6)
-														files.append(file)
-						'''elif resp3.code == 400:
-							print bcolors.YELLOW + '[+]  Found a new file: ' +char + char2 + char3 + bcolors.ENDC
-
-							# Now that we have the file name, go get the extension
-							file = findExtension(url, dir, char + char2 + char3)
-							files.append(file)
-
-				elif resp2.code == 400:
-					print bcolors.YELLOW + '[+]  Found a new file: ' +char + char2 + bcolors.ENDC
-
-					# Now that we have the file name, go get the extension
-					file = findExtension(url, dir, char + char2)
-					files.append(file)
-
-		elif resp1.code == 400:
-			print bcolors.YELLOW + '[+]  Found a new file: ' +char + bcolors.ENDC
-
-			# Now that we have the file name, go get the extension
-			file = findExtension(url, dir, char)
-			files.append(file)'''
-
+																if resp6.code == 404:  # Got the sixth valid char
+																	# Check to see if this is a directory or file
+																	if checkForDirectory(url+dir+char+char2+char3+char4+char5+char6):
+																		print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
+																		findings_dir.append(char+char2+char3+char4+char5+char6)
+																	else:
+																		# Now that we have the file name, go get the extension
+																		file = findExtension(url, dir, char+char2+char3+char4+char5+char6)
+																		files.append(file)
 
 	# Store the file in a dictionary by directory. This will be important in the future when we do recursive tests
 	findings_file[dir] = files
-
 
 	findings['files'] = findings_file
 	findings['dirs'] = sorted(findings_dir)
@@ -312,6 +314,7 @@ def main():
 	# Do the initial search for files in the root of the web server
 	findings = checkEightDotThreeEnum(url_good, check_string)
 
+
 	if args.v:
 		print bcolors.PURPLE + 'Files: %s' % findings['files']
 		print 'Dirs: %s' %  findings['dirs'] + bcolors.ENDC
@@ -326,14 +329,6 @@ def main():
 	# Start the URL requests to the server
 	print bcolors.GREEN + '[-]  Now starting the word guessing using word list calls' + bcolors.ENDC
 
-	# Read in the extensions word list into a list
-	# This is only temporary until I get the extension stuff above working
-	try:
-		extensions = open(exts,'r').readlines()
-	except (IOError) :
-		print bcolors.RED + '[!]  [Error] Can\'t read the wordlist file you entered.' + bcolors.ENDC
-		sys.exit()
-
 
 	# So the URL is live and gives 200s back (otherwise script would have exit'd)
     # Find matches to the filename in our word list
@@ -346,8 +341,12 @@ def main():
 			ext = ext_temp.lstrip('.')
 
 			# Go search the user's word list file for matches for the file
-			print '[+]  Searching for %s in word list' % filename
-			filename_matches = searchFileForString(filename, args.wordlist)
+			if len(filename) < 6:
+				print bcolors.GREEN + '[!]  File name (%s) too short to look up in word list. We will use it to bruteforce.' % filename + bcolors.ENDC
+				filename_matches.append(filename)
+			else:
+				print '[+]  Searching for %s in word list' % filename
+				filename_matches = searchFileForString(filename, args.wordlist)
 
 			# If nothing came back from the search, just try use the original string
 			if not filename_matches:
@@ -356,7 +355,7 @@ def main():
 
 			# Go search the extension word list file for matches for the extension
 			if len(ext) < 3:
-				print '[-]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext
+				print bcolors.GREEN + '[!]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
 				ext_matches.append(ext.lower())
 			else:
 				print '[+]  Searching for %s in extension word list' % ext
