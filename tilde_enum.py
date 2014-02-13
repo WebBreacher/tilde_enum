@@ -439,7 +439,8 @@ def main():
 	else:
 		print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
 
-	print bcolors.YELLOW + '\n[*]  Here are all the 8.3 names we found' + bcolors.ENDC
+	print bcolors.YELLOW + '\n[*]  Here are all the 8.3 names we found.'
+	print '[*]  If any of these are 6 chars and look like they should work,\n        try the file name with the first or second instead of all of them.' + bcolors.ENDC
 	for dir in findings['files'].keys():
 		for filename in sorted(findings['files'][dir]):
 			# Break apart the file into filename and extension
@@ -468,7 +469,9 @@ def main():
 
 # Command Line Arguments
 parser = argparse.ArgumentParser(description='Expands the file names found from the tilde enumeration vuln')
+# TODO - Implement the -b option
 parser.add_argument('-b', action='store_true', default=False, help='brute force backup extension, extensions')
+# TODO - Implement the -f option
 parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
