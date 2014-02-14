@@ -404,10 +404,19 @@ def main():
 
 	# Match directory names
 	print bcolors.GREEN + '[-]  Trying to find directory matches now.' + bcolors.ENDC
+	if args.dirwordlist:
+		print bcolors.GREEN + '[-]  -d option recognized. Using the %s file for directory name look-ups.' + args.dirwordlist + bcolors.ENDC
+	else:
+		print bcolors.GREEN + '[-]  Using the general wordlist to discover directory names.'
+		print                 '       If this does not work well, consider using the -d argument and providing a directory name wordlist.' + bcolors.ENDC
+
 	for dir in findings['dirs']:
 		# Go search the user's word list file for matches for the directory name
 		if args.v: print bcolors.PURPLE + '[+]  Searching for %s in word list' % dir + bcolors.ENDC
-		dir_matches = searchFileForString(dir, args.wordlist)
+		if args.dirwordlist:
+			dir_matches = searchFileForString(dir, args.dirwordlist)
+		else:
+			dir_matches = searchFileForString(dir, args.wordlist)
 
 		# If nothing came back from the search, just try use the original string
 		if not dir_matches:
@@ -461,7 +470,7 @@ def main():
 	if findings_dir_final:
 		print bcolors.YELLOW + '[*]  We found directories for you to look at' + bcolors.ENDC
 		for out in sorted(findings_dir_final):
-			print '[*]      %s' % out
+			print bcolors.CYAN + '[*]      %s' % out + bcolors.ENDC
 
 	print bcolors.YELLOW + '\n[*]  Here are all the directory names we found. You may wish to try to guess them yourself too.' + bcolors.ENDC
 	for dir in sorted(findings['dirs']):
@@ -487,6 +496,7 @@ def main():
 parser = argparse.ArgumentParser(description='Exploits and expands the file names found from the tilde enumeration vuln')
 # TODO - Implement the -b option
 parser.add_argument('-b', action='store_true', default=False, help='brute force backup extension, extensions')
+parser.add_argument('-d', dest='dirwordlist', help='an optional wordlist for directory name content')
 parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
