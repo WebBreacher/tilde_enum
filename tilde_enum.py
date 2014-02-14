@@ -318,7 +318,7 @@ def main():
 
 
 	url = urlparse(args.url)
-	url_good = url.scheme + '://' + url.netloc
+	url_good = url.scheme + '://' + url.netloc + url.path
 
 	# Do the initial search for files in the root of the web server
 	findings = checkEightDotThreeEnum(url_good, check_string)
