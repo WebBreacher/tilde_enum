@@ -222,6 +222,10 @@ def checkEightDotThreeEnum(url, check_string, dir='/'):
 	findings = {}
 	files = []
 
+	# Add a slash to the end of the URL
+	if url[-1:] != '/':
+		url = url + '/'
+
 	for char in chars:
 		resp1 = getWebServerResponse(url+dir+char+check_string)
 		if resp1.code == 404:  # Got the first valid char
@@ -319,8 +323,7 @@ def main():
 
 	url = urlparse(args.url)
 	url_good = url.scheme + '://' + url.netloc + url.path
-	if url_good[-1:] != '/':
-		url_good = url_good + '/'
+
 
 	# Do the initial search for files in the root of the web server
 	findings = checkEightDotThreeEnum(url.scheme + '://' + url.netloc, check_string, url.path)
@@ -407,7 +410,7 @@ def main():
 	# Match directory names
 	print bcolors.GREEN + '[-]  Trying to find directory matches now.' + bcolors.ENDC
 	if args.dirwordlist:
-		print bcolors.GREEN + '[-]  -d option recognized. Using the %s file for directory name look-ups.' + args.dirwordlist + bcolors.ENDC
+		print bcolors.GREEN + '[-]  -d option recognized. Using the %s file for directory name look-ups.' % args.dirwordlist + bcolors.ENDC
 	else:
 		print bcolors.GREEN + '[-]  Using the general wordlist to discover directory names.'
 		print                 '       If this does not work well, consider using the -d argument and providing a directory name wordlist.' + bcolors.ENDC
