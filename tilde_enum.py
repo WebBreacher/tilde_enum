@@ -134,7 +134,7 @@ def searchFileForString(string, file):
 def checkForTildeVuln(url):
 	# Check if the server is IIS and vuln to tilde directory enumeration
 	if args.f:
-		print bcolors.YELLOW + '[!]  You have used the -f switch to force us to try. Using the IIS/6 "*~1*/.aspx" string.' + bcolors.ENDC
+		print bcolors.YELLOW + '[!]  You have used the -f switch to force us to scan. Well played. Using the IIS/6 "*~1*/.aspx" string.' + bcolors.ENDC
 		check_string = '*~1*/.aspx'
 		return check_string
 
@@ -159,7 +159,6 @@ def checkForTildeVuln(url):
 
 	# Check to see if the server is vulnerable to the tilde vulnerability
 	resp = getWebServerResponse(args.url + '/*~1*/.aspx')
-	print resp # debug
 	if resp.code == 404:
 		print bcolors.YELLOW + '[+]  The server is vulnerable to the tilde enumeration vulnerability (IIS/5|6.x)..' + bcolors.ENDC
 	else:
@@ -309,7 +308,7 @@ def main():
 	if args.url:
 		response_code = initialCheckUrl(args.url)
 	else:
-		print bcolors.RED + '[!] You need to enter a valid URL for us to test.' + bcolors.ENDC
+		print bcolors.RED + '[!]  You need to enter a valid URL for us to test.' + bcolors.ENDC
 		sys.exit()
 
 	if args.v: print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
