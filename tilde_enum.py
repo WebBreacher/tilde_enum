@@ -344,7 +344,7 @@ def main():
 	for dir in findings['files'].keys():
 		ext_matches= []
 		for filename in findings['files'][dir]:
-
+			if not filename: continue
 			# Break apart the file into filename and extension
 			filename, ext_temp = os.path.splitext(filename)
 			ext = ext_temp.lstrip('.')
@@ -463,6 +463,7 @@ def main():
 	print '[*]  If any of these are 6 chars and look like they should work,\n        try the file name with the first or second instead of all of them.' + bcolors.ENDC
 	for dir in findings['files'].keys():
 		for filename in sorted(findings['files'][dir]):
+			if not filename: continue
 			# Break apart the file into filename and extension
 			filename, ext = os.path.splitext(filename)
 			print '[*]      %s%s%s~1%s' % (url_good, dir, filename, ext)
