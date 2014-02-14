@@ -321,7 +321,7 @@ def main():
 	url_good = url.scheme + '://' + url.netloc + url.path
 
 	# Do the initial search for files in the root of the web server
-	findings = checkEightDotThreeEnum(url_good, check_string)
+	findings = checkEightDotThreeEnum(url.scheme + '://' + url.netloc, check_string, url.path)
 
 
 	if args.v:
