@@ -356,10 +356,10 @@ def main():
 
 			# Go search the user's word list file for matches for the file
 			if len(filename) < 6:
-				print bcolors.GREEN + '[-]  File name (%s) too  to look up in word list. We will use it to bruteforce.' % filename + bcolors.ENDC
+				print bcolors.GREEN + '[-]  File name (%s) too short to look up in word list. We will use it to bruteforce.' % filename + bcolors.ENDC
 				filename_matches.append(filename)
 			else:
-				print '[+]  Searching for %s in word list' % filename
+				if args.v: print bcolors.PURPLE + '[-]  Searching for %s in word list' % filename + bcolors.ENDC
 				filename_matches = searchFileForString(filename, args.wordlist)
 
 			# If nothing came back from the search, just try use the original string
@@ -372,7 +372,7 @@ def main():
 				print bcolors.GREEN + '[-]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
 				ext_matches.append(ext.lower())
 			else:
-				print '[+]  Searching for %s in extension word list' % ext
+				if args.v: print bcolors.PURPLE + '[-]  Searching for %s in extension word list' % ext + bcolors.ENDC
 				ext_matches = searchFileForString(ext, exts)
 			if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
 
@@ -410,7 +410,7 @@ def main():
 	# Match directory names
 	print bcolors.GREEN + '[-]  Trying to find directory matches now.' + bcolors.ENDC
 	if args.dirwordlist:
-		print bcolors.GREEN + '[-]  -d option recognized. Using the %s file for directory name look-ups.' % args.dirwordlist + bcolors.ENDC
+		print bcolors.GREEN + '[-]  You used the "-d" option.\n      Using %s for directory name look-ups.' % args.dirwordlist + bcolors.ENDC
 	else:
 		print bcolors.GREEN + '[-]  Using the general wordlist to discover directory names.'
 		print                 '       If this does not work well, consider using the -d argument and providing a directory name wordlist.' + bcolors.ENDC
@@ -474,13 +474,13 @@ def main():
 			print '[*]      %s%s%s~1%s' % (url_good, dir, filename, ext)
 
 	if findings_dir_final:
-		print bcolors.YELLOW + '[*]  We found directories for you to look at' + bcolors.ENDC
+		print bcolors.YELLOW + '\n[*]  We found directories for you to look at' + bcolors.ENDC
 		for out in sorted(findings_dir_final):
 			print bcolors.CYAN + '[*]      %s' % out + bcolors.ENDC
 
 	print bcolors.YELLOW + '\n[*]  Here are all the directory names we found. You may wish to try to guess them yourself too.' + bcolors.ENDC
 	for dir in sorted(findings['dirs']):
-		print '[*]      %s/%s/' % (url_good, dir)
+		print '[?]      %s/%s/' % (url_good, dir)
 
 
 	if findings_other:
