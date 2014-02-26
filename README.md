@@ -32,6 +32,7 @@ optional arguments:
                   report it as an IIS system
   -u URL          URL to scan
   -v              verbose output
+  -w WAIT         time in seconds to wait between requests
 </pre>
 
 
