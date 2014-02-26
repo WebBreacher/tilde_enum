@@ -15,6 +15,7 @@ import random
 import string
 from urllib2 import Request, urlopen, URLError
 from urlparse import urlparse
+from time import sleep
 
 
 #=================================================
@@ -176,7 +177,9 @@ def checkForTildeVuln(url):
 def findExtension(url, filename):
     # Find out how many chars the extension has
     resp1 = getWebServerResponse(url+filename+'~1.%3f/.aspx')		# 1 extension chars
+    sleep(args.wait)
     resp2 = getWebServerResponse(url+filename+'~1.%3f%3f/.aspx')	# 2 extension chars
+    sleep(args.wait)
     resp3 = getWebServerResponse(url+filename+'~1.%3f%3f%3f/.aspx')	# 3+ extension chars
 
     if resp1.code == 404:
@@ -236,23 +239,22 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
 
     for char in chars:
         resp1 = getWebServerResponse(url+char+check_string)
+        sleep(args.wait)
         if resp1.code == 404:  # Got the first valid char
 
             # TODO - Use these or remove these
             # Check to see if the word is longer than just this char
-            length_gauge2 = getWebServerResponse(url+char+'~1*/.aspx')					# 2 char filename
-            length_gauge3 = getWebServerResponse(url+char+'%3f~1*/.aspx')				# 3 char filename
-            length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')				# 4 char filename
+            length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')		    # 4 char filename
             length_gauge5 = getWebServerResponse(url+char+'%3f%3f%3f~1*/.aspx')			# 5 char filename
-            length_gauge6 = getWebServerResponse(url+char+'%3f%3f%3f%3f~1*/.aspx')		# 6 char filename
-            length_gauge7 = getWebServerResponse(url+char+'%3f%3f%3f%3f%3f~1*/.aspx')	# 7 char filename
 
             for char2 in chars:
                 resp2 = getWebServerResponse(url+char+char2+check_string)
+                sleep(args.wait)
 
                 if resp2.code == 404:  # Got the second valid char
                     for char3 in chars:
                         resp3 = getWebServerResponse(url+char+char2+char3+check_string)
+                        sleep(args.wait)
 
                         if resp3.code == 404:  # Got the third valid char
                             if length_gauge4.code == 404:
@@ -267,6 +269,7 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
                             else:
                                 for char4 in chars:
                                     resp4 = getWebServerResponse(url+char+char2+char3+char4+check_string)
+                                    sleep(args.wait)
 
                                     if resp4.code == 404:  # Got the fourth valid char
                                         if length_gauge5.code == 404:
@@ -281,6 +284,7 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
                                         else:
                                             for char5 in chars:
                                                 resp5 = getWebServerResponse(url+char+char2+char3+char4+char5+check_string)
+                                                sleep(args.wait)
 
                                                 if resp5.code == 404:  # Got the fifth valid char
                                                     if length_gauge5.code == 404:
@@ -296,6 +300,7 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
                                                         if resp5.code == 404:  # Got the fifth valid char
                                                             for char6 in chars:
                                                                 resp6 = getWebServerResponse(url+char+char2+char3+char4+char5+char6+check_string)
+                                                                sleep(args.wait)
 
                                                                 if resp6.code == 404:  # Got the sixth valid char
                                                                     # Check to see if this is a directory or file
@@ -359,6 +364,7 @@ def performLookups(findings, url_good):
                     else:
                         url_to_try = url_good + line + '.' + e.rstrip()
                     url_response = getWebServerResponse(url_to_try)
+                    sleep(args.wait)
 
                     # Pull out just the HTTP response code number
                     if hasattr(url_response, 'code'):
@@ -406,6 +412,7 @@ def performLookups(findings, url_good):
         # Now try to guess the live dir name
         for matches in dir_matches:
             test_response_code, test_response_length = '', ''
+            sleep(args.wait)
 
             url_to_try = url_good + '/' + matches + '/'
             url_response = getWebServerResponse(url_to_try)
@@ -441,6 +448,9 @@ def main():
 
     if args.v:
         print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
+
+    if args.wait != 0 :
+        print '[-]  User-supplied delay detected. Waiting %s seconds between HTTP requests.' % args.wait
 
     # Check to see if the remote server is IIS and vulnerable to the Tilde issue
     check_string = checkForTildeVuln(args.url)
@@ -530,6 +540,7 @@ parser.add_argument('-d', dest='dirwordlist', help='an optional wordlist for dir
 parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
+parser.add_argument('-w', dest='wait', default=0, type=float, help='time in seconds to wait between requests')
 parser.add_argument('wordlist', help='the wordlist file')
 args = parser.parse_args()
 
