@@ -49,16 +49,6 @@ chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_. '
 # Response codes - user and error
 response_code = {}
 
-# Set up the default file names and extensions for main web pages in directories
-default_index = [
-                    ['default', 'home', 'index', 'isstart', ''],
-                    ['.asp', '.aspx', '.htm', '.html', '.php', '.php3', '.php4', '.php5', '.cgi', '.shtml',
-                     '.jsp', '.do', '.cfm', '.nsf', '']
-                ]
-
-# Use itertools to combine all the names and extensions
-default_files = list(itertools.product(*default_index))
-
 
 #=================================================
 # Functions & Classes
@@ -426,30 +416,29 @@ def performLookups(findings, url_good):
             test_response_code, test_response_length = '', ''
             sleep(args.wait)
 
-            for default_name in default_files:
-                # Here we check the response to a plain dir request AND one with default files
-                url_to_try = url_good + '/' + matches + '/'
-                url_response = getWebServerResponse(url_to_try + ''.join(default_name))
+            # Here we check the response to a plain dir request AND one with default files
+            url_to_try = url_good + '/' + matches + '/'
+            url_response = getWebServerResponse(url_to_try)
 
-                # Pull out just the HTTP response code number
-                if hasattr(url_response, 'code'):
-                    test_response_code = url_response.code
-                    test_response_length = url_response.headers['Content-Length']
-                elif hasattr(url_response, 'getcode'):
-                    test_response_code = url_response.getcode()
-                    test_response_length = len(url_response.reason())
-                else:
-                    test_response_code = 0
+            # Pull out just the HTTP response code number
+            if hasattr(url_response, 'code'):
+                test_response_code = url_response.code
+                test_response_length = url_response.headers['Content-Length']
+            elif hasattr(url_response, 'getcode'):
+                test_response_code = url_response.getcode()
+                test_response_length = len(url_response.reason())
+            else:
+                test_response_code = 0
 
-                if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
+            if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
 
-                # Here is where we figure out if we found something or just found something odd
-                if test_response_code == response_code['user_code']:
-                    print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
-                    findings_dir_final.append(url_to_try + '  - Size ' + test_response_length)
-                elif test_response_code != 404 and test_response_code != 0:
-                    print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response) + bcolors.ENDC
-                    findings_dir_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
+            # Here is where we figure out if we found something or just found something odd
+            if test_response_code == response_code['user_code']:
+                print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
+                findings_dir_final.append(url_to_try + '  - Size ' + test_response_length)
+            elif test_response_code != 404 and test_response_code != 0:
+                print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response) + bcolors.ENDC
+                findings_dir_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
 
 
 def main():
@@ -537,6 +526,20 @@ def main():
             print '[?]      %s' % out
 
     if findings_dir_other:
+
+        # TODO - Implement additional checking for each of the dirs ! Code 200s
+        # Set up the default file names and extensions for main web pages in directories
+        '''default_index = [
+                            ['default', 'home', 'index', 'isstart', ''],
+                            ['.asp', '.aspx', '.htm', '.html', '.php', '.php3', '.php4', '.php5', '.cgi', '.shtml',
+                             '.jsp', '.do', '.cfm', '.nsf', '']
+                        ]
+
+        # Use itertools to combine all the names and extensions
+        default_files = list(itertools.product(*default_index))
+
+        + ''.join(default_name)'''
+
         print bcolors.YELLOW + '\n[*]  We found directory URLs you should check out. They were not HTTP response code 200s.' + bcolors.ENDC
         for out in sorted(findings_dir_other):
             print '[?]      %s' % out

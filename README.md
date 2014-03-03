@@ -15,6 +15,9 @@ directories that have names longer than 8 characters (since only then will they 
 by the vulnerability). You should still try to enumerate directories using a word list and
 [DirBuster](https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project) or Burp Intruder or something.
 
+Just as a note: on Windows computers you can view 8.3 names in the command prompt window by using the
+`dir /x` command. One of the columns will be the 8.3 name (if there is one).
+
 Always enjoy feedback and suggestions.
 
 
