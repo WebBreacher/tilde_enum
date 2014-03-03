@@ -4,7 +4,7 @@
 -------------------------------------------------------------------------------
 Name:		tilde_enum.py
 Purpose:	Expands the file names found from the tilde enumeration vuln
-Author:     Micah Hoffman (@WebBreacher)
+Author:		Micah Hoffman (@WebBreacher)
 -------------------------------------------------------------------------------
 """
 
@@ -529,16 +529,16 @@ def main():
 
         # TODO - Implement additional checking for each of the dirs ! Code 200s
         # Set up the default file names and extensions for main web pages in directories
-        '''default_index = [
-                            ['default', 'home', 'index', 'isstart', ''],
-                            ['.asp', '.aspx', '.htm', '.html', '.php', '.php3', '.php4', '.php5', '.cgi', '.shtml',
-                             '.jsp', '.do', '.cfm', '.nsf', '']
-                        ]
+        #default_index = [
+        #                    ['default', 'home', 'index', 'isstart', ''],
+        #                    ['.asp', '.aspx', '.htm', '.html', '.php', '.php3', '.php4', '.php5', '.cgi', '.shtml',
+        #                     '.jsp', '.do', '.cfm', '.nsf', '']
+        #                ]
 
         # Use itertools to combine all the names and extensions
-        default_files = list(itertools.product(*default_index))
+        #default_files = list(itertools.product(*default_index))
 
-        + ''.join(default_name)'''
+        #+ ''.join(default_name)
 
         print bcolors.YELLOW + '\n[*]  We found directory URLs you should check out. They were not HTTP response code 200s.' + bcolors.ENDC
         for out in sorted(findings_dir_other):
