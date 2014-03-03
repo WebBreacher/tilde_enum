@@ -4,7 +4,7 @@
 -------------------------------------------------------------------------------
 Name:		tilde_enum.py
 Purpose:	Expands the file names found from the tilde enumeration vuln
-Authors:	Ryan Tierney (nu11by73) and Micah Hoffman (@WebBreacher)
+Author:	    Micah Hoffman (@WebBreacher)
 -------------------------------------------------------------------------------
 """
 
