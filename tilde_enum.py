@@ -139,6 +139,9 @@ def searchFileForString(targetstring, filename):
 
 
 def checkForTildeVuln(url):
+	# Set the default string to be IIS6.x
+	check_string = '*~1*/.aspx'
+
     # Check if the server is IIS and vuln to tilde directory enumeration
     if args.f:
         print bcolors.YELLOW + '[!]  You have used the -f switch to force us to scan. Well played. Using the IIS/6 "*~1*/.aspx" string.' + bcolors.ENDC
@@ -152,7 +155,7 @@ def checkForTildeVuln(url):
             if   '5.' in server_header.headers['server']:
                 check_string = '*~1*'
             elif '6.' in server_header.headers['server']:
-                check_string = '*~1*/.aspx'
+                pass # just use the default string already set
         else:
             print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
             print 				'[!]     (Request error: %s)' % server_header.getcode()
