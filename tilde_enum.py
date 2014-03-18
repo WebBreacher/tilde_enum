@@ -139,8 +139,8 @@ def searchFileForString(targetstring, filename):
 
 
 def checkForTildeVuln(url):
-	# Set the default string to be IIS6.x
-	check_string = '*~1*/.aspx'
+    # Set the default string to be IIS6.x
+    check_string = '*~1*/.aspx'
 
     # Check if the server is IIS and vuln to tilde directory enumeration
     if args.f:
