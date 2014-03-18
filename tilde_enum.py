@@ -380,7 +380,7 @@ def performLookups(findings, url_good):
 
                     # Here is where we figure out if we found something or just found something odd
                     if test_response_code == response_code['user_code']:
-                        print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
+                        print '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try)
                         findings_final.append(url_to_try + '  - Size ' + test_response_length)
                     elif test_response_code != 404 and test_response_code != 400:
                         print '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response)
@@ -498,7 +498,7 @@ def main():
         print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
 
     print bcolors.YELLOW + '\n[*]  Here are all the 8.3 names we found.'
-    print '[*]  If any of these are 6 chars and look like they should work,'
+    print '[*]  If any of these are 5-6 chars and look like they should work,'
     print '        try the file name with the first or second instead of all of them.' + bcolors.ENDC
 
     for dirname in findings['files'].keys():
