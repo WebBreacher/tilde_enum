@@ -10,7 +10,14 @@ For word lists, the [fuzzdb](https://code.google.com/p/fuzzdb/) word lists are p
 https://code.google.com/p/fuzzdb/source/browse/trunk/discovery/PredictableRes/raft-small-words-lowercase.txt
 (or large or medium) for this work.
 
-There are known bugs that we are working to resolve in this version (it is 93.5+% good).
+This is not a directory enumerator (i.e., tries all words in a list against a web server). It will only find
+directories that have names longer than 8 characters (since only then will they have 8.3 names and be recognized
+by the vulnerability). You should still try to enumerate directories using a word list and
+[DirBuster](https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project) or Burp Intruder or something.
+
+Just as a note: on Windows computers you can view 8.3 names in the command prompt window by using the
+`dir /x` command. One of the columns will be the 8.3 name (if there is one).
+
 Always enjoy feedback and suggestions.
 
 

@@ -4,7 +4,7 @@
 -------------------------------------------------------------------------------
 Name:		tilde_enum.py
 Purpose:	Expands the file names found from the tilde enumeration vuln
-Authors:	Ryan Tierney (nu11by73) and Micah Hoffman (@WebBreacher)
+Author:		Micah Hoffman (@WebBreacher)
 -------------------------------------------------------------------------------
 """
 
@@ -13,6 +13,7 @@ import sys
 import argparse
 import random
 import string
+import itertools
 from urllib2 import Request, urlopen, URLError
 from urlparse import urlparse
 from time import sleep
@@ -47,6 +48,7 @@ chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_. '
 
 # Response codes - user and error
 response_code = {}
+
 
 #=================================================
 # Functions & Classes
@@ -414,6 +416,7 @@ def performLookups(findings, url_good):
             test_response_code, test_response_length = '', ''
             sleep(args.wait)
 
+            # Here we check the response to a plain dir request AND one with default files
             url_to_try = url_good + '/' + matches + '/'
             url_response = getWebServerResponse(url_to_try)
 
@@ -523,6 +526,20 @@ def main():
             print '[?]      %s' % out
 
     if findings_dir_other:
+
+        # TODO - Implement additional checking for each of the dirs ! Code 200s
+        # Set up the default file names and extensions for main web pages in directories
+        #default_index = [
+        #                    ['default', 'home', 'index', 'isstart', ''],
+        #                    ['.asp', '.aspx', '.htm', '.html', '.php', '.php3', '.php4', '.php5', '.cgi', '.shtml',
+        #                     '.jsp', '.do', '.cfm', '.nsf', '']
+        #                ]
+
+        # Use itertools to combine all the names and extensions
+        #default_files = list(itertools.product(*default_index))
+
+        #+ ''.join(default_name)
+
         print bcolors.YELLOW + '\n[*]  We found directory URLs you should check out. They were not HTTP response code 200s.' + bcolors.ENDC
         for out in sorted(findings_dir_other):
             print '[?]      %s' % out
