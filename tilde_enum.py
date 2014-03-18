@@ -227,7 +227,6 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
     # Here is where we find the files and dirs using the 404 and 400 errors
     # If the dir var is not passed then we assume this is the root level of the server
 
-    # TODO - 1 and 2 char file names report back same as 6+ char names.
     findings = {}
     files = []
 
@@ -244,7 +243,6 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
         sleep(args.wait)
         if resp1.code == 404:  # Got the first valid char
 
-            # TODO - Use these or remove these
             # Check to see if the word is longer than just this char
             length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')		    # 4 char filename
             length_gauge5 = getWebServerResponse(url+char+'%3f%3f%3f~1*/.aspx')			# 5 char filename
@@ -500,6 +498,11 @@ def main():
     else:
         print bcolors.RED + '[ ]  No file full names were discovered. Sorry dude.' + bcolors.ENDC
 
+    if findings_dir_final:
+        print bcolors.YELLOW + '\n[*]  We found directories for you to look at:' + bcolors.ENDC
+        for out in sorted(findings_dir_final):
+            print bcolors.CYAN + '[*]      %s' % out + bcolors.ENDC
+
     print bcolors.YELLOW + '\n[*]  Here are all the 8.3 names we found.'
     print '[*]  If any of these are 5-6 chars and look like they should work,'
     print '        try the file name with the first or second instead of all of them.' + bcolors.ENDC
@@ -511,11 +514,6 @@ def main():
             filename, ext = os.path.splitext(filename)
             print '[*]      %s://%s%s%s~1%s' % (url.scheme, url.netloc, dirname, filename, ext)
 
-    if findings_dir_final:
-        print bcolors.YELLOW + '\n[*]  We found directories for you to look at:' + bcolors.ENDC
-        for out in sorted(findings_dir_final):
-            print bcolors.CYAN + '[*]      %s' % out + bcolors.ENDC
-
     print bcolors.YELLOW + '\n[*]  Here are all the directory names we found. You may wish to try to guess them yourself too.' + bcolors.ENDC
     for dirname in sorted(findings['dirs']):
         print '[?]      %s/%s~1/' % (url.scheme + '://' + url.netloc, dirname)
@@ -523,7 +521,7 @@ def main():
     if findings_other:
         print bcolors.YELLOW + '\n[*]  We found URLs you check out. They were not HTTP response code 200s.' + bcolors.ENDC
         for out in sorted(findings_other):
-            print '[?]      %s' % out
+            print bcolors.DARKCYAN + '[?]      %s' % out + bcolors.ENDC
 
     if findings_dir_other:
 
@@ -542,7 +540,7 @@ def main():
 
         print bcolors.YELLOW + '\n[*]  We found directory URLs you should check out. They were not HTTP response code 200s.' + bcolors.ENDC
         for out in sorted(findings_dir_other):
-            print '[?]      %s' % out
+            print bcolors.DARKCYAN + '[?]      %s' % out + bcolors.ENDC
 
 
 #=================================================
