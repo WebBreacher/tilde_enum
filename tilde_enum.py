@@ -389,7 +389,7 @@ def performLookups(findings, url_good):
 
                     # Here is where we figure out if we found something or just found something odd
                     if test_response_code == response_code['user_code']:
-                        print '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try)
+                        print '[*]  Found file: (Size %s) %s' % (test_response_length, url_to_try)
                         findings_final.append(url_to_try + '  - Size ' + test_response_length)
                     elif test_response_code != 404 and test_response_code != 400:
                         print '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response)
@@ -418,14 +418,14 @@ def performLookups(findings, url_good):
         if args.v:
             print bcolors.PURPLE + '[+]  Directory name matches for %s are: %s' % (dirname, dir_matches) + bcolors.ENDC
 
-        # Now try to guess the live dir name
+        # Now try to guess the live dir name by cycling through each directory name
         for matches in dir_matches:
             test_response_code, test_response_length = '', ''
-            sleep(args.wait)
 
             # Here we check the response to a plain dir request AND one with default files
             url_to_try = url_good + '/' + matches + '/'
             url_response = getWebServerResponse(url_to_try)
+            if args.wait: sleep(args.wait)
 
             # Pull out just the HTTP response code number
             if hasattr(url_response, 'code'):
@@ -437,12 +437,45 @@ def performLookups(findings, url_good):
             else:
                 test_response_code = 0
 
-            if args.v: print '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code)
+            if args.v: print bcolors.PURPLE + '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code) + bcolors.ENDC
 
             # Here is where we figure out if we found something or just found something odd
             if test_response_code == response_code['user_code']:
-                print bcolors.YELLOW + '[*]  Found one! (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
+                print bcolors.YELLOW + '[*]  Found directory: (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
                 findings_dir_final.append(url_to_try + '  - Size ' + test_response_length)
+            elif test_response_code == 403:
+                # Sometimes directories cannot just be requested and we have to know the default file name in it.
+                default_index_files = ['default.asp', 'default.aspx', 'default.htm', 'default.html', 'home.htm', 'home.html',
+                                       'index.asp', 'index.aspx', 'index.cgi', 'index.htm', 'index.html', 'index.php',
+                                       'index.php3', 'index.php4', 'index.php5', 'index.shtml', 'isstart.htm', 'placeholder.html']
+
+                # Cycle through all the default_index_files and see if any of those get us a match
+                # TODO - This does not feel right duplicating the code from above. Should be a method instead
+                for index_file in default_index_files:
+                    test_response_code, test_response_length = '', ''
+
+                    # Here we check the response to a plain dir request AND one with default files
+                    url_to_try = url_good + '/' + matches + '/' + index_file
+                    url_response = getWebServerResponse(url_to_try)
+                    if args.wait: sleep(args.wait)
+
+                    # Pull out just the HTTP response code number
+                    if hasattr(url_response, 'code'):
+                        test_response_code = url_response.code
+                        test_response_length = url_response.headers['Content-Length']
+                    elif hasattr(url_response, 'getcode'):
+                        test_response_code = url_response.getcode()
+                        test_response_length = len(url_response.reason())
+                    else:
+                        test_response_code = 0
+
+                    if args.v: print bcolors.PURPLE + '[+]  URL: %s  -> RESPONSE: %s' % (url_to_try, test_response_code) + bcolors.ENDC
+
+                    # Here is where we figure out if we found something or just found something odd
+                    if test_response_code == response_code['user_code']:
+                        print '[*]  Found directory: (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
+                        findings_dir_final.append(url_to_try + '  - Size ' + test_response_length)
+
             elif test_response_code != 404 and test_response_code != 0:
                 print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response) + bcolors.ENDC
                 findings_dir_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
