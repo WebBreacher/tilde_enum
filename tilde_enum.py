@@ -444,6 +444,9 @@ def performLookups(findings, url_good):
                 print bcolors.YELLOW + '[*]  Found directory: (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
                 findings_dir_final.append(url_to_try + '  - Size ' + test_response_length)
             elif test_response_code == 403:
+                print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response) + bcolors.ENDC
+                findings_dir_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
+
                 # Sometimes directories cannot just be requested and we have to know the default file name in it.
                 default_index_files = ['default.asp', 'default.aspx', 'default.htm', 'default.html', 'home.htm', 'home.html',
                                        'index.asp', 'index.aspx', 'index.cgi', 'index.htm', 'index.html', 'index.php',
@@ -473,10 +476,10 @@ def performLookups(findings, url_good):
 
                     # Here is where we figure out if we found something or just found something odd
                     if test_response_code == response_code['user_code']:
-                        print '[*]  Found directory: (Size %s) %s' % (test_response_length, url_to_try) + bcolors.ENDC
-                        findings_dir_final.append(url_to_try + '  - Size ' + test_response_length)
+                        print '[*]  Found directory: (Size %s) %s' % (test_response_length, url_good + '/' + matches) + bcolors.ENDC
+                        findings_dir_final.append(url_good + '/' + matches + '  - Size ' + test_response_length)
 
-            elif test_response_code != 404 and test_response_code != 0:
+            elif test_response_code != 404 and test_response_code != 403:
                 print bcolors.YELLOW + '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response) + bcolors.ENDC
                 findings_dir_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
 
