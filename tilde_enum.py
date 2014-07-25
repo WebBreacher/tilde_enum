@@ -15,10 +15,9 @@ import argparse
 import random
 import string
 import itertools
-from urllib2 import Request, urlopen, URLError
+import urllib2
 from urlparse import urlparse
 from time import sleep
-import urllib2
 
 
 #=================================================
@@ -69,10 +68,10 @@ def checkOs():
 def getWebServerResponse(url):
     # This function takes in a URL and outputs the HTTP response code and content length (or error)
     try:
-        req = Request(url, None, headers)
-        response = urlopen(req)
+        req = urllib2.Request(url, None, headers)
+        response = urllib2.urlopen(req)
         return response
-    except URLError as e:
+    except urllib2.URLError as e:
         return e
     except Exception as e:
         return 0
