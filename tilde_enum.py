@@ -110,8 +110,9 @@ def initialCheckUrl(url):
     print bcolors.GREEN + '[-]  Testing with user-submitted %s' % url + bcolors.ENDC
     url_response = getWebServerResponse(url)
     if url_response.getcode():
-        print '[-]    URLUser -> HTTP Code: %s, Response Length: %s' % (url_response.getcode(), len(url_response.read()))
-        response_code['user_code'], response_code['user_length'] = url_response.getcode(), len(url_response.read())
+        response_code['user_length'] = len(url_response.read())
+        response_code['user_code'] = url_response.getcode()
+        print '[-]    URLUser -> HTTP Code: %s, Response Length: %s' % (response_code['user_code'], response_code['user_length'])
     else:
         print '[+]    URLUser -> HTTP Code: %s, Error Code: %s' % (url_response.code, url_response.reason)
         response_code['user_code'], response_code['user_reason'] = url_response.code, url_response.reason
