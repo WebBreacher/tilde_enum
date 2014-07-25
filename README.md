@@ -40,6 +40,7 @@ optional arguments:
   -u URL          URL to scan
   -v              verbose output
   -w WAIT         time in seconds to wait between requests
+  -p PROXY        Use a proxy host:port
 </pre>
 
 
