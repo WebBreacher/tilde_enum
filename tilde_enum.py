@@ -5,6 +5,7 @@
 Name:        tilde_enum.py
 Purpose:    Expands the file names found from the tilde enumeration vuln
 Author:        Micah Hoffman (@WebBreacher)
+Updates:       Crafty Fox (@vulp1n3)
 -------------------------------------------------------------------------------
 """
 
@@ -17,6 +18,7 @@ import itertools
 from urllib2 import Request, urlopen, URLError
 from urlparse import urlparse
 from time import sleep
+import urllib2
 
 
 #=================================================
@@ -44,7 +46,7 @@ findings_dir_other_final =  []
 exts = 'exts'
 
 # Character set to use for brute forcing ([0-9][a-z]_-. )
-chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_. '
+chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_'
 
 # Response codes - user and error
 response_code = {}
@@ -600,6 +602,7 @@ parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
 parser.add_argument('-w', dest='wait', default=0, type=float, help='time in seconds to wait between requests')
 parser.add_argument('wordlist', help='the wordlist file')
+parser.add_argument('-p', dest='proxy',default='', help='Use a proxy host:port')
 args = parser.parse_args()
 
 # COLORIZATION OF OUTPUT
@@ -649,5 +652,12 @@ else:
 
 if args.v:
     print bcolors.PURPLE + '[-]  Entering "Verbose Mode"....brace yourself for additional information.' + bcolors.ENDC
+
+if args.proxy:
+    print bcolors.PURPLE + '[-]  Using proxy for requests: ' + args.proxy
+    proxy = urllib2.ProxyHandler({'http': args.proxy, 'https': args.proxy})
+    opener = urllib2.build_opener(proxy)
+    urllib2.install_opener(opener)
+
 
 if __name__ == "__main__": main()
