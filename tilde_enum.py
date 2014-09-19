@@ -225,6 +225,7 @@ def findExtension(url, filename):
                                 print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+char3+bcolors.ENDC
                                 return filename+'.'+char1+char2+char3
 
+
 def checkForDirectory(url):
     resp = getWebServerResponse(url+'~1/.aspx')
     if resp.code == 404:
@@ -232,6 +233,16 @@ def checkForDirectory(url):
     else:
         return False
 
+
+def fileOrDir(files, url, stub):
+    filename = findExtension(url, stub)
+    if filename and len(filename) > len(stub):
+        files.append(filename)
+    else:
+        checkForDirectory(url+stub)
+        print bcolors.YELLOW + '[+]  Found a directory: ' + stub + bcolors.ENDC
+        findings_dir.append(stub)
+        
 
 def checkEightDotThreeEnum(url, check_string, dirname='/'):
     # Here is where we find the files and dirs using the 404 and 400 errors
@@ -248,83 +259,53 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
     u = urlparse(url)
     dirname = u.path
 
+    ## Note! 1-2 char filenames show up as 4-6 char 8.3 filenames due to padding with a hash
+    ##       So we skip to 3 char filenames here
     for char in chars:
-        resp1 = getWebServerResponse(url+char+check_string)
         sleep(args.wait)
+        resp1 = getWebServerResponse(url+char+check_string)
         if resp1.code == 404:  # Got the first valid char
-
-            # Check to see if the word is longer than just this char
-            length_gauge4 = getWebServerResponse(url+char+'%3f%3f~1*/.aspx')       # 4 char filename
-            length_gauge5 = getWebServerResponse(url+char+'%3f%3f%3f~1*/.aspx')    # 5 char filename
-
             for char2 in chars:
-                resp2 = getWebServerResponse(url+char+char2+check_string)
+                stub = char+char2
                 sleep(args.wait)
-
+                resp2 = getWebServerResponse(url+stub+check_string)
+                
                 if resp2.code == 404:  # Got the second valid char
                     for char3 in chars:
-                        resp3 = getWebServerResponse(url+char+char2+char3+check_string)
+                        stub = char+char2+char3
                         sleep(args.wait)
-
+                        resp3 = getWebServerResponse(url+stub+check_string)
+                        
                         if resp3.code == 404:  # Got the third valid char
-                            if length_gauge4.code == 404:
-                                if checkForDirectory(url+char+char2+char3):
-                                    print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3 + bcolors.ENDC
-                                    findings_dir.append(char+char2+char3)
-                                else:
-                                    # Now that we have the file name, go get the extension
-                                    filename = findExtension(url, char+char2+char3)
-                                    files.append(filename)
-                                    continue
+                            if getWebServerResponse(url+stub+'%3f~1*/.aspx').code == 404:
+                                fileOrDir(files, url, stub)
                             else:
                                 for char4 in chars:
-                                    resp4 = getWebServerResponse(url+char+char2+char3+char4+check_string)
+                                    stub = char+char2+char3+char4
                                     sleep(args.wait)
-
+                                    resp4 = getWebServerResponse(url+stub+check_string)
+                                    
                                     if resp4.code == 404:  # Got the fourth valid char
-                                        if length_gauge5.code == 404:
-                                            if checkForDirectory(url+char+char2+char3+char4):
-                                                print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4 + bcolors.ENDC
-                                                findings_dir.append(char+char2+char3+char4)
-                                            else:
-                                                # Now that we have the file name, go get the extension
-                                                filename = findExtension(url, char+char2+char3+char4)
-                                                files.append(filename)
-                                                continue
+                                        if getWebServerResponse(url+stub+'%3f~1*/.aspx').code == 404:
+                                            fileOrDir(files, url, stub)
                                         else:
                                             for char5 in chars:
-                                                resp5 = getWebServerResponse(url+char+char2+char3+char4+char5+check_string)
+                                                stub = char+char2+char3+char4+char5
                                                 sleep(args.wait)
-
+                                                resp5 = getWebServerResponse(url+stub+check_string)
+                                                
                                                 if resp5.code == 404:  # Got the fifth valid char
-                                                    if length_gauge5.code == 404:
-                                                        if checkForDirectory(url+char+char2+char3+char4+char5):
-                                                            print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5 + bcolors.ENDC
-                                                            findings_dir.append(char+char2+char3+char4+char5)
-                                                        else:
-                                                            # Now that we have the file name, go get the extension
-                                                            filename = findExtension(url, char+char2+char3+char4+char5)
-                                                            files.append(filename)
-                                                            continue
+                                                    if getWebServerResponse(url+stub+'%3f~1*/.aspx').code != 404:
+                                                        fileOrDir(files, url, stub)
                                                     else:
-                                                        if resp5.code == 404:  # Got the fifth valid char
-                                                            for char6 in chars:
-                                                                resp6 = getWebServerResponse(url+char+char2+char3+char4+char5+char6+check_string)
-                                                                sleep(args.wait)
+                                                        for char6 in chars:
+                                                            stub = char+char2+char3+char4+char5+char6
+                                                            sleep(args.wait)
+                                                            resp6 = getWebServerResponse(url+stub+check_string)
 
-                                                                if resp6.code == 404:  # Got the sixth valid char
-                                                                    # Check to see if this is a directory or file
-                                                                    root = char+char2+char3+char4+char5+char6
-                                                                    filename = findExtension(url, char+char2+char3+char4+char5+char6)
-                                                                    #check if filename is now longer than the root indicating 
-                                                                    #we found valid extension
-                                                                    if filename and len(filename) > len(root):
-                                                                    	files.append(filename)
-                                                                    else:
-                                                                    	checkForDirectory(url+char+char2+char3+char4+char5+char6)
-                                                                        print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
-                                                                        findings_dir.append(char+char2+char3+char4+char5+char6)
-                                                                        
+                                                            if resp6.code == 404:  # Got the sixth valid char
+                                                                fileOrDir(files, url, stub)
+
 
     # Store the file in a dictionary by directory. This will be important in the future when we do recursive tests
     findings_file[dirname] = files
