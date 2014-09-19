@@ -6,6 +6,7 @@ Name:       tilde_enum.py
 Purpose:    Expands the file names found from the tilde enumeration vuln
 Author:     Micah Hoffman (@WebBreacher)
 Updates:    Crafty Fox (@vulp1n3)
+Source:     https://github.com/WebBreacher/tilde_enum
 -------------------------------------------------------------------------------
 """
 
@@ -184,9 +185,7 @@ def checkForTildeVuln(url):
 def findExtension(url, filename):
     # Find out how many chars the extension has
     resp1 = getWebServerResponse(url+filename+'~1.%3f/.aspx')       # 1 extension chars
-    sleep(args.wait)
     resp2 = getWebServerResponse(url+filename+'~1.%3f%3f/.aspx')    # 2 extension chars
-    sleep(args.wait)
     resp3 = getWebServerResponse(url+filename+'~1.%3f%3f%3f/.aspx') # 3+ extension chars
 
     if resp1.code == 404:
