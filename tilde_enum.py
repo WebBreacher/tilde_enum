@@ -197,7 +197,7 @@ def findExtension(url, filename):
                 print bcolors.YELLOW + '[+]  Found file:  ' + filename+' . '+char1+bcolors.ENDC
                 return filename+'.'+char1
 
-    elif resp1.code == 500 and resp2.code == 404:
+    elif resp1.code != 404 and resp2.code == 404:
         for char1 in chars:
             resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
             sleep(args.wait)
@@ -209,7 +209,7 @@ def findExtension(url, filename):
                         print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+bcolors.ENDC
                         return filename+'.'+char1+char2
 
-    elif resp1.code == 500 and resp2.code == 500 and resp3.code == 404:
+    elif resp1.code != 404 and resp2.code != 404 and resp3.code == 404:
         for char1 in chars:
             resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
             sleep(args.wait)
@@ -224,7 +224,6 @@ def findExtension(url, filename):
                             if resp3a.code == 404:  # Got the third valid char
                                 print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+char3+bcolors.ENDC
                                 return filename+'.'+char1+char2+char3
-
 
 def checkForDirectory(url):
     resp = getWebServerResponse(url+'~1/.aspx')
@@ -315,13 +314,17 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
 
                                                                 if resp6.code == 404:  # Got the sixth valid char
                                                                     # Check to see if this is a directory or file
-                                                                    if checkForDirectory(url+char+char2+char3+char4+char5+char6):
+                                                                    root = char+char2+char3+char4+char5+char6
+                                                                    filename = findExtension(url, char+char2+char3+char4+char5+char6)
+                                                                    #check if filename is now longer than the root indicating 
+                                                                    #we found valid extension
+                                                                    if filename and len(filename) > len(root):
+                                                                    	files.append(filename)
+                                                                    else:
+                                                                    	checkForDirectory(url+char+char2+char3+char4+char5+char6)
                                                                         print bcolors.YELLOW + '[+]  Found a new directory: ' +char+char2+char3+char4+char5+char6 + bcolors.ENDC
                                                                         findings_dir.append(char+char2+char3+char4+char5+char6)
-                                                                    else:
-                                                                        # Now that we have the file name, go get the extension
-                                                                        filename = findExtension(url, char+char2+char3+char4+char5+char6)
-                                                                        files.append(filename)
+                                                                        
 
     # Store the file in a dictionary by directory. This will be important in the future when we do recursive tests
     findings_file[dirname] = files
