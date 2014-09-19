@@ -1,22 +1,17 @@
 tilde_enum
 ==========
 
-Takes a URL and then exploits the IIS tilde 8.3 enumeration vuln and tries to get you full file names.
+Takes a URL and then exploits the IIS tilde 8.3 enumeration vuln (https://soroush.secproject.com/blog/tag/iis-tilde-vulnerability/, http://www.acunetix.com/vulnerabilities/microsoft-iis-tilde-direc/, http://soroush.secproject.com/downloadable/microsoft_iis_tilde_character_vulnerability_feature.pdf) and tries to get you full file and directory names.
 
-You feed this script a URL and also a word list of potential file names. The script will look up the file
-roots in your word list and then try them with appropriate extensions.
+This is an attempt to take the cool POC scanner at https://github.com/irsdl/iis-shortname-scanner/tree/master/ and get you the rest of the file/directory names so you can retrieve them.
 
-For word lists, the [fuzzdb](https://code.google.com/p/fuzzdb/) word lists are pretty good. We sometimes use the
-https://code.google.com/p/fuzzdb/source/browse/trunk/discovery/PredictableRes/raft-small-words-lowercase.txt
-(or large or medium) for this work.
+Feed this script a URL and also a word list of potential file/dir names. The script will look up the roots in your word list and then try them with appropriate extensions.
 
-This is not a directory enumerator (i.e., tries all words in a list against a web server). It will only find
-directories that have names longer than 8 characters (since only then will they have 8.3 names and be recognized
-by the vulnerability). You should still try to enumerate directories using a word list and
-[DirBuster](https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project) or Burp Intruder or something.
+For word lists, the [fuzzdb](https://code.google.com/p/fuzzdb/) word lists are pretty good. We sometimes use the https://code.google.com/p/fuzzdb/source/browse/trunk/discovery/PredictableRes/raft-small-words-lowercase.txt (or large or medium) for this work.
 
-Just as a note: on Windows computers you can view 8.3 names in the command prompt window by using the
-`dir /x` command. One of the columns will be the 8.3 name (if there is one).
+This is not a directory enumerator (i.e., tries all words in a list against a web server). It will only find directories that have names longer than 8 characters (since only then will they have 8.3 names and be recognized by the vulnerability). You should still try to enumerate directories using a word list and [DirBuster](https://www.owasp.org/index.php/Category:OWASP_DirBuster_Project) or Burp Intruder or something. 
+
+Just as a note: on Windows computers you can view 8.3 names in the command prompt window by using the `dir /x` command. One of the columns will be the 8.3 name (if there is one).
 
 Always enjoy feedback and suggestions.
 
