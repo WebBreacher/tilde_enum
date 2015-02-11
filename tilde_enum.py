@@ -70,6 +70,8 @@ def getWebServerResponse(url):
     # This function takes in a URL and outputs the HTTP response code and content length (or error)
     try:
         req = urllib2.Request(url, None, headers)
+        if args.cookies:
+            req.add_header("Cookie", args.cookies)
         response = urllib2.urlopen(req)
         return response
     except urllib2.URLError as e:
@@ -485,12 +487,12 @@ def main():
     # Open the wordlist file (or try to)
     try:
         wordlist = open(args.wordlist,'r').readlines()
-    except (IOError) :
+    except (IOError, TypeError):
         print bcolors.RED + '[!]  [Error] Can\'t read the wordlist file you entered.' + bcolors.ENDC
         sys.exit()
 
     if args.v:
-        print bcolors.PURPLE + '[+]  Opened wordlist successfully' % args.wordlist + bcolors.ENDC
+        print bcolors.PURPLE + '[+]  Opened wordlist %s successfully' % args.wordlist + bcolors.ENDC
         
     # Check to see if the remote server is IIS and vulnerable to the Tilde issue
     check_string = checkForTildeVuln(args.url)
@@ -588,6 +590,7 @@ def main():
 
 # Command Line Arguments
 parser = argparse.ArgumentParser(description='Exploits and expands the file names found from the tilde enumeration vuln')
+parser.add_argument('-c', dest='cookies', help='cookies to be used in the request')
 parser.add_argument('-d', dest='dirwordlist', help='an optional wordlist for directory name content')
 parser.add_argument('-f', action='store_true', default=False, help='force testing of the server even if the headers do not report it as an IIS system')
 parser.add_argument('-p', dest='proxy', default='', help='Use a proxy host:port')
