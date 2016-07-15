@@ -19,23 +19,22 @@ Always enjoy feedback and suggestions.
 Help
 ====
 <pre>$  ./tilde_enum.py -h
-usage: tilde_enum.py [-h] [-b] [-d DIRWORDLIST] [-f] [-u URL] [-v] wordlist
+usage: tilde_enum.py [-h] [-c COOKIES] [-d DIRWORDLIST] [-f] [-p PROXY]
+                     [-s SNOOZE] [-u URL] [-v] [-w WORDLIST]
 
 Exploits and expands the file names found from the tilde enumeration vuln
 
-positional arguments:
-  wordlist        the wordlist file
-
 optional arguments:
   -h, --help      show this help message and exit
-  -b              brute force backup extension, extensions
+  -c COOKIES      cookies to be used in the request
   -d DIRWORDLIST  an optional wordlist for directory name content
   -f              force testing of the server even if the headers do not
                   report it as an IIS system
+  -p PROXY        Use a proxy host:port
+  -s SNOOZE       time in seconds to sleep/wait between requests
   -u URL          URL to scan
   -v              verbose output
-  -w WAIT         time in seconds to wait between requests
-  -p PROXY        Use a proxy host:port
+  -w WORDLIST     the word list to be used for guessing files
 </pre>
 
 
