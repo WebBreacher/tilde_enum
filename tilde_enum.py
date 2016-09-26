@@ -17,6 +17,7 @@ import random
 import string
 import itertools
 import urllib2
+import ssl
 from urlparse import urlparse
 from time import sleep
 
@@ -51,6 +52,9 @@ chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_'
 # Response codes - user and error
 response_code = {}
 
+# SSL context
+ssl_ctx = ssl.create_default_context()
+
 
 #=================================================
 # Functions & Classes
@@ -72,10 +76,12 @@ def getWebServerResponse(url):
         req = urllib2.Request(url, None, headers)
         if args.cookies:
             req.add_header("Cookie", args.cookies)
-        response = urllib2.urlopen(req)
+        response = urllib2.urlopen(req, context=ssl_ctx)
         return response
     except urllib2.URLError as e:
         return e
+    except ssl.CertificateError as e:
+        sys.exit(bcolors.RED + '[!]  SSL Certificate Error: try running again with --no-check-certificate' + bcolors.ENDC)
     except Exception as e:
         return 0
 
@@ -598,6 +604,7 @@ parser.add_argument('-s', dest='snooze', default=0, type=float, help='time in se
 parser.add_argument('-u', dest='url', help='URL to scan')
 parser.add_argument('-v', action='store_true', default=False, help='verbose output')
 parser.add_argument('-w', dest='wordlist', help='the word list to be used for guessing files')
+parser.add_argument('--no-check-certificate', action='store_true', help='don\'t verify the SSL certificate')
 args = parser.parse_args()
 
 # COLORIZATION OF OUTPUT
@@ -653,5 +660,9 @@ if args.proxy:
 
 if args.v:
     print bcolors.PURPLE + '[-]  Entering "Verbose Mode"....brace yourself for additional information.' + bcolors.ENDC
+
+if args.no_check_certificate:
+    ssl_ctx.check_hostname = False
+    ssl_ctx.verify_mode = ssl.CERT_NONE
 
 if __name__ == "__main__": main()

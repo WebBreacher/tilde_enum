@@ -18,23 +18,26 @@ Always enjoy feedback and suggestions.
 
 Help
 ====
-<pre>$  ./tilde_enum.py -h
+<pre>$ ./tilde_enum.py --help
 usage: tilde_enum.py [-h] [-c COOKIES] [-d DIRWORDLIST] [-f] [-p PROXY]
                      [-s SNOOZE] [-u URL] [-v] [-w WORDLIST]
+                     [--no-check-certificate]
 
 Exploits and expands the file names found from the tilde enumeration vuln
 
 optional arguments:
-  -h, --help      show this help message and exit
-  -c COOKIES      cookies to be used in the request
-  -d DIRWORDLIST  an optional wordlist for directory name content
-  -f              force testing of the server even if the headers do not
-                  report it as an IIS system
-  -p PROXY        Use a proxy host:port
-  -s SNOOZE       time in seconds to sleep/wait between requests
-  -u URL          URL to scan
-  -v              verbose output
-  -w WORDLIST     the word list to be used for guessing files
+  -h, --help            show this help message and exit
+  -c COOKIES            cookies to be used in the request
+  -d DIRWORDLIST        an optional wordlist for directory name content
+  -f                    force testing of the server even if the headers do not
+                        report it as an IIS system
+  -p PROXY              Use a proxy host:port
+  -s SNOOZE             time in seconds to sleep/wait between requests
+  -u URL                URL to scan
+  -v                    verbose output
+  -w WORDLIST           the word list to be used for guessing files
+  --no-check-certificate
+                        don't verify the SSL certificate
 </pre>
 
 
