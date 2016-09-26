@@ -18,7 +18,7 @@ Always enjoy feedback and suggestions.
 
 Help
 ====
-<pre>$ ./tilde_enum.py --help
+<pre>$ ./tilde_enum.py -h
 usage: tilde_enum.py [-h] [-c COOKIES] [-d DIRWORDLIST] [-f] [-p PROXY]
                      [-s SNOOZE] [-u URL] [-v] [-w WORDLIST]
                      [--no-check-certificate]
