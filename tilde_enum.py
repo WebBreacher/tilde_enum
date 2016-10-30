@@ -324,6 +324,7 @@ def checkEightDotThreeEnum(url, check_string, dirname='/'):
 
 
 def performLookups(findings, url_good):
+    filename_matches = []
     # Find matches to the filename in our word list
     for dirname in findings['files'].keys():
         ext_matches= []
