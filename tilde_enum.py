@@ -63,10 +63,10 @@ ssl_ctx = ssl.create_default_context()
 
 def checkOs():
     # Check operating system for colorization
-    if os.name == "nt":
-        operating_system = "windows"
+    if os.name == 'nt':
+        operating_system = 'windows'
     else:
-        operating_system = "posix"
+        operating_system = 'posix'
     return operating_system
 
 
@@ -75,7 +75,8 @@ def getWebServerResponse(url):
     try:
         req = urllib2.Request(url, None, headers)
         if args.cookies:
-            req.add_header("Cookie", args.cookies)
+            req.add_header('Cookie', args.cookies)
+            req.add_header('Connection', 'keep-alive')
         response = urllib2.urlopen(req, context=ssl_ctx)
         return response
     except urllib2.URLError as e:
