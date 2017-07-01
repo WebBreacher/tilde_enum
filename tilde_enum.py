@@ -53,7 +53,7 @@ chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_'
 response_code = {}
 
 # SSL context
-ssl_ctx = ssl.create_default_context()
+ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)#ssl.create_default_context()
 
 
 #=================================================
@@ -98,9 +98,11 @@ def initialCheckUrl(url):
     not_there_string = ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for x in range(10))
     print bcolors.GREEN + '[-]  Testing with dummy file request %s://%s/%s.htm' % (u.scheme, u.netloc, not_there_string) + bcolors.ENDC
     not_there_url = u.scheme + '://' + u.netloc + '/' + not_there_string + '.htm'
+    
 
     # Make the dummy request to the remote server
     not_there_response = getWebServerResponse(not_there_url)
+    
 
     # Create a content length
     not_there_response_content_length = len(not_there_response.read())
