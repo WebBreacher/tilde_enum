@@ -28,7 +28,7 @@ from time import sleep
 
 # In the 'headers' below, change the data that you want sent to the remote server
 # This is an IE10 user agent
-headers = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)'}
+custom_headers = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)'}
 
 # Targets is the list of files from the scanner output
 targets = []
@@ -73,10 +73,14 @@ def checkOs():
 def getWebServerResponse(url):
     # This function takes in a URL and outputs the HTTP response code and content length (or error)
     try:
-        req = urllib2.Request(url, None, headers)
+        req = urllib2.Request(url, headers=custom_headers)
         if args.cookies:
             req.add_header('Cookie', args.cookies)
             req.add_header('Connection', 'keep-alive')
+        ssl_ctx = None
+        u = urlparse(url)
+        if u.scheme == 'https':
+            ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
         response = urllib2.urlopen(req, context=ssl_ctx)
         return response
     except urllib2.URLError as e:
