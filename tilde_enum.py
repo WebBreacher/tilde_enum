@@ -52,10 +52,6 @@ chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_'
 # Response codes - user and error
 response_code = {}
 
-# SSL context
-ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)#ssl.create_default_context()
-
-
 #=================================================
 # Functions & Classes
 #=================================================
@@ -77,11 +73,7 @@ def getWebServerResponse(url):
         if args.cookies:
             req.add_header('Cookie', args.cookies)
             req.add_header('Connection', 'keep-alive')
-        ssl_ctx = None
-        u = urlparse(url)
-        if u.scheme == 'https':
-            ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-        response = urllib2.urlopen(req, context=ssl_ctx)
+        response = urllib2.urlopen(req)
         return response
     except urllib2.URLError as e:
         return e
@@ -173,6 +165,8 @@ def checkForTildeVuln(url):
             if   '5.' in server_header.headers['server']:
                 check_string = '*~1*'
             elif '6.' in server_header.headers['server']:
+                pass # just use the default string already set
+            else:
                 pass # just use the default string already set
         else:
             print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
