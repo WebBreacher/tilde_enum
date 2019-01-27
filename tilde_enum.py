@@ -28,7 +28,7 @@ from time import sleep
 
 # In the 'headers' below, change the data that you want sent to the remote server
 # This is an IE10 user agent
-headers = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)'}
+custom_headers = {'User-Agent': 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)'}
 
 # Targets is the list of files from the scanner output
 targets = []
@@ -52,10 +52,6 @@ chars = 'abcdefghijklmnopqrstuvwxyz1234567890-_'
 # Response codes - user and error
 response_code = {}
 
-# SSL context
-ssl_ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1)#ssl.create_default_context()
-
-
 #=================================================
 # Functions & Classes
 #=================================================
@@ -73,11 +69,11 @@ def checkOs():
 def getWebServerResponse(url):
     # This function takes in a URL and outputs the HTTP response code and content length (or error)
     try:
-        req = urllib2.Request(url, None, headers)
+        req = urllib2.Request(url, headers=custom_headers)
         if args.cookies:
             req.add_header('Cookie', args.cookies)
             req.add_header('Connection', 'keep-alive')
-        response = urllib2.urlopen(req, context=ssl_ctx)
+        response = urllib2.urlopen(req)
         return response
     except urllib2.URLError as e:
         return e
@@ -169,6 +165,8 @@ def checkForTildeVuln(url):
             if   '5.' in server_header.headers['server']:
                 check_string = '*~1*'
             elif '6.' in server_header.headers['server']:
+                pass # just use the default string already set
+            else:
                 pass # just use the default string already set
         else:
             print bcolors.RED + '[!]  Error. Server is not reporting that it is IIS.'
